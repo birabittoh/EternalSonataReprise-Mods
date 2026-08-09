@@ -1,0 +1,7 @@
+/sdk/
+/out/
+/mods/
+/pkg/
+__pycache__/
+*.pyc
+/extracted/
