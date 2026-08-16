@@ -1,0 +1,7 @@
+manifest_version = 2
+name = "Demo Characters"
+version = "1.0.0"
+game_version = "1.2.0"
+author = "BiRabittoh"
+description = "Fills the game's two vacant character slots with new party members, as a worked example of the character-definition API."
+code = "demo_characters"

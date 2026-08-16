@@ -1,7 +1,7 @@
 manifest_version = 2
 name = "Party Overlay"
-version = "1.0.0"
-game_version = "1.1.0"
+version = "2.0.0"
+game_version = "1.2.0"
 author = "BiRabittoh"
-description = "Overlay (F5) that allows reading and writing live party state."
+description = "Overlay (F5) to inspect and edit the party: members, order, stats, healing."
 code = "party_overlay"
