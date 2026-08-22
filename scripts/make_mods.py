@@ -119,13 +119,14 @@ def run(args, **kwargs):
     return result
 
 
-def find_built_binary(build_dir, name, plat):
+def find_built_binary(build_dir, name, plat, config):
     info = PLATFORM_INFO[plat]
-    candidates = []
-    for config, postfix in CONFIG_POSTFIXES.items():
-        fname = f"{info['prefix']}{name}{postfix}{info['ext']}"
-        candidates.append(os.path.join(build_dir, fname))
-        candidates.append(os.path.join(build_dir, config, fname))
+    postfix = CONFIG_POSTFIXES[config]
+    fname = f"{info['prefix']}{name}{postfix}{info['ext']}"
+    candidates = [
+        os.path.join(build_dir, fname),
+        os.path.join(build_dir, config, fname),
+    ]
     for path in candidates:
         if os.path.isfile(path):
             return path
@@ -205,7 +206,7 @@ def build_mod_native(mod_src_dir, name, sdk_dir, cxx_compiler, root, plat, confi
     run(configure_args)
     run(["cmake", "--build", build_dir, "--parallel", str(os.cpu_count() or 1)])
 
-    binary = find_built_binary(build_dir, name, plat)
+    binary = find_built_binary(build_dir, name, plat, config)
     if not binary:
         print(f"error: couldn't find built binary for mod '{name}' under {build_dir}",
               file=sys.stderr)
@@ -230,7 +231,7 @@ def build_mod_windows_cross(mod_src_dir, name, sdk_dir, root, config):
     run(configure_args)
     run(["cmake", "--build", build_dir, "--parallel", str(os.cpu_count() or 1)])
 
-    binary = find_built_binary(build_dir, name, "windows-x64")
+    binary = find_built_binary(build_dir, name, "windows-x64", config)
     if not binary:
         print(f"error: couldn't find built binary for mod '{name}' under {build_dir}",
               file=sys.stderr)
