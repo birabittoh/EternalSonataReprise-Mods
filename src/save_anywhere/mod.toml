@@ -1,0 +1,7 @@
+manifest_version = 2
+name = "Save Anywhere"
+version = "1.0.0"
+game_version = "1.1.4"
+author = "Marco"
+description = "Keeps the Save entry of the pause menu selectable everywhere, not only next to a save point."
+code = "save_anywhere"
