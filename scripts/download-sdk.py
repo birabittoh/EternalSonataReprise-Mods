@@ -13,8 +13,16 @@ from urllib.request import urlopen, Request
 DEFAULT_REPO = "birabittoh/rexglue-sdk"
 
 
+def api_headers():
+    headers = {"User-Agent": "python"}
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
+
+
 def fetch_json(url):
-    req = Request(url, headers={"User-Agent": "python"})
+    req = Request(url, headers=api_headers())
     with urlopen(req) as resp:
         return json.load(resp)
 
@@ -34,6 +42,14 @@ def detect_platform():
     elif os_name == "Windows":
         if arch in ("x86_64", "amd64"):
             return "win-amd64"
+        else:
+            raise RuntimeError(f"Unsupported architecture: {arch}")
+
+    elif os_name == "Darwin":
+        if arch in ("x86_64", "amd64"):
+            return "mac-amd64"
+        elif arch in ("aarch64", "arm64"):
+            return "mac-arm64"
         else:
             raise RuntimeError(f"Unsupported architecture: {arch}")
 
@@ -108,7 +124,7 @@ def main():
     )
     parser.add_argument(
         "--platform",
-        choices=["win-amd64", "linux-amd64", "linux-arm64"],
+        choices=["win-amd64", "linux-amd64", "linux-arm64", "mac-amd64", "mac-arm64"],
         help="Override the auto-detected platform (e.g. to fetch the win-amd64 SDK "
              "from a Linux cross-build container)"
     )

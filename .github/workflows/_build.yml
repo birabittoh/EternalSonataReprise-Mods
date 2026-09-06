@@ -24,6 +24,8 @@ jobs:
           - windows-x64
           - linux-x64
           - linux-arm64
+          - mac-x64
+          - mac-arm64
         include:
           - platform: windows-x64
             runner: windows-latest
@@ -36,6 +38,14 @@ jobs:
           - platform: linux-arm64
             runner: ubuntu-24.04-arm
             sdk_subdir: linux-arm64
+
+          - platform: mac-x64
+            runner: macos-15-intel
+            sdk_subdir: mac-amd64
+
+          - platform: mac-arm64
+            runner: macos-15
+            sdk_subdir: mac-arm64
 
     steps:
       - name: Checkout
@@ -61,6 +71,8 @@ jobs:
 
       - name: Download SDK
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python scripts/download-sdk.py "sdk/${{ matrix.sdk_subdir }}" --pinned --platform ${{ matrix.sdk_subdir }}
 
       - name: Build mods
@@ -68,8 +80,8 @@ jobs:
         run: python scripts/make_mods.py --target ${{ matrix.platform }} --sdk-dir sdk
 
       # Raw, per-platform build output, not zipped yet. The `package` job
-      # below downloads all three platforms' raw output and merges them so
-      # each mod ends up in a single zip with all three platforms' binaries
+      # below downloads every platform's raw output and merges them so
+      # each mod ends up in a single zip with every platform's binaries
       # under code/<platform>/
       - name: Upload raw build output
         uses: actions/upload-artifact@v4
@@ -107,6 +119,8 @@ jobs:
             --input raw/raw-mods-windows-x64 \
             --input raw/raw-mods-linux-x64 \
             --input raw/raw-mods-linux-arm64 \
+            --input raw/raw-mods-mac-x64 \
+            --input raw/raw-mods-mac-arm64 \
             --output pkg \
             --write-mod-list mods.json \
             --merged-output merged

@@ -28,14 +28,16 @@ side without linux-x64 and linux-arm64 colliding on the same lib<name>.so
 filename. Installing a mod into an actual game copy means flattening the
 one platform subdirectory you need into code/ directly (see README.md).
 
-This repo tracks three platforms: windows-x64, linux-x64, linux-arm64. By
+This repo tracks five platforms: windows-x64, linux-x64, linux-arm64,
+mac-x64, and mac-arm64. By
 default every mod is built for whichever platform(s) you pass via --target
-(default: just the host's own platform, matching how CI's three-runner
-matrix builds one platform per job, then merges all three into per-mod
+(default: just the host's own platform, matching how CI's runner
+matrix builds one platform per job, then merges them into per-mod
 release zips -- see .github/workflows/_build.yml).
 
 Each target's SDK lives in its own subdirectory (<sdk-root>/win-amd64,
-<sdk-root>/linux-amd64, <sdk-root>/linux-arm64), fetched via
+<sdk-root>/linux-amd64, <sdk-root>/linux-arm64, <sdk-root>/mac-amd64, or
+<sdk-root>/mac-arm64), fetched via
 scripts/download-sdk.py --pinned --platform ...
 
 Building a target that doesn't match the host: windows-x64 and linux-x64 can
@@ -62,6 +64,8 @@ PLATFORM_INFO = {
     "windows-x64": {"ext": ".dll", "prefix": "", "sdk_subdir": "win-amd64", "manifest_key": "windows-x64"},
     "linux-x64": {"ext": ".so", "prefix": "lib", "sdk_subdir": "linux-amd64", "manifest_key": "linux-x64"},
     "linux-arm64": {"ext": ".so", "prefix": "lib", "sdk_subdir": "linux-arm64", "manifest_key": "linux-arm64"},
+    "mac-x64": {"ext": ".dylib", "prefix": "lib", "sdk_subdir": "mac-amd64", "manifest_key": "mac-x64"},
+    "mac-arm64": {"ext": ".dylib", "prefix": "lib", "sdk_subdir": "mac-arm64", "manifest_key": "mac-arm64"},
 }
 
 # Mods build Release (plain name) by default.
@@ -89,7 +93,12 @@ def host_plat():
             return "linux-x64"
         if arch in ("aarch64", "arm64"):
             return "linux-arm64"
-    return None  # macOS or anything else: no target can be built natively
+    if system == "Darwin":
+        if arch in ("x86_64", "amd64"):
+            return "mac-x64"
+        if arch in ("aarch64", "arm64"):
+            return "mac-arm64"
+    return None
 
 
 def can_cross_build_windows_locally():
@@ -328,12 +337,13 @@ def main():
     parser.add_argument("--sdk-dir", default="sdk",
                         help="SDK root; each platform's SDK is expected at "
                              "<sdk-dir>/win-amd64, <sdk-dir>/linux-amd64, or "
-                             "<sdk-dir>/linux-arm64 (default: sdk)")
+                             "<sdk-dir>/linux-arm64, <sdk-dir>/mac-amd64, or "
+                             "<sdk-dir>/mac-arm64 (default: sdk)")
     parser.add_argument("--mod", action="append", metavar="NAME",
                         help="Only build this mod (repeatable); default: all of src/*")
     parser.add_argument("--target", action="append", dest="targets",
                         choices=list(PLATFORM_INFO.keys()),
-                        metavar="{windows-x64,linux-x64,linux-arm64}",
+                        metavar="{windows-x64,linux-x64,linux-arm64,mac-x64,mac-arm64}",
                         help="Only build for this platform (repeatable); default: host's own platform")
     parser.add_argument("--package", action="store_true",
                         help="Also zip each built mod to mods/<name>.zip")
