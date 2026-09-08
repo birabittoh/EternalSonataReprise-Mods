@@ -1,0 +1,7 @@
+manifest_version = 2
+name = "Item API Probe"
+version = "1.0.0"
+game_version = "1.1.4"
+author = "BiRabittoh"
+description = "Overlay (F8) that exercises the whole Item API: reading the inventory and the Item Set, giving/taking items, registering/removing set entries, the budget accounting, the error paths, and the item/set events."
+code = "item_probe"
