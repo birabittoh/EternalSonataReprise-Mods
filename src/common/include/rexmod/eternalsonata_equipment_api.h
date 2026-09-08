@@ -4,6 +4,13 @@
 // each of its four slots, what it could wear there, what a swap would do to
 // its stats, and how to equip and unequip from a mod.
 //
+// It also covers the character's equipped magic, which the game stores in the
+// same struct, immediately after the four equipment ids, and which its own
+// equipment screen edits on a second page. Magic has its own id space and its
+// own table, so it gets its own calls below rather than being folded into the
+// equipment slots, but it is the same system from a mod's point of view and
+// lives behind the same header and the same availability test.
+//
 // This is the companion to eternalsonata_item_api.h and shares its id space:
 // a piece of equipment is an item, with a record in the same master entity
 // table and a name in the same text blocks. The reverse-engineering behind it
@@ -27,10 +34,13 @@
 //
 //     ETERNALSONATA_EQUIPMENT_EVENT_EQUIPPED   "eternalsonata.equipment.equipped"
 //     ETERNALSONATA_EQUIPMENT_EVENT_UNEQUIPPED "eternalsonata.equipment.unequipped"
+//     ETERNALSONATA_EQUIPMENT_EVENT_MAGIC_SET  "eternalsonata.equipment.magic_set"
 //
-// In both the payload's `u64` is the character number and `f64` is the item id
-// that went into or came out of the slot. `bytes` is empty. The slot is not in
-// the payload; read it back with EternalSonataGetAllEquipment if it matters.
+// In all three the payload's `u64` is the character number and `f64` is the id
+// that went into or came out of the slot: an item id for the first two and a
+// magic id for the third, 0 when a magic slot was cleared. `bytes` is empty.
+// The slot is not in the payload; read it back with
+// EternalSonataGetAllEquipment or EternalSonataGetAllMagic if it matters.
 // They fire for the game's own changes as well as for a mod's, on the frame
 // after the change. Loading a save republishes nothing: whatever the save
 // restores is adopted silently.
@@ -65,6 +75,7 @@ extern "C" {
 // Event names on the mod registry bus. See the note at the top.
 #define ETERNALSONATA_EQUIPMENT_EVENT_EQUIPPED "eternalsonata.equipment.equipped"
 #define ETERNALSONATA_EQUIPMENT_EVENT_UNEQUIPPED "eternalsonata.equipment.unequipped"
+#define ETERNALSONATA_EQUIPMENT_EVENT_MAGIC_SET "eternalsonata.equipment.magic_set"
 
 // Characters are the same 1..10 the Party API uses.
 #define ETERNALSONATA_EQUIPMENT_CHARACTER_MIN 1
@@ -76,9 +87,19 @@ extern "C" {
 
 // Four slots per character, and the game offers no fifth. The stat struct has
 // room for more halfwords after the four ids, but the recompute
-// (sub_821E7898) and the commit (sub_821E8390) both only ever see these four,
-// and what follows them is the Score Piece block, which is a different system.
+// (sub_821E7898) and the commit (sub_821E8390) both only ever see these four.
+// What follows them is the character's equipped magic, which is a separate id
+// space with its own table and has its own four slots below.
 #define ETERNALSONATA_EQUIPMENT_SLOT_COUNT 4
+
+// Four magic slots per character, at +0x24 of the same struct.
+#define ETERNALSONATA_MAGIC_SLOT_COUNT 4
+
+// Magic ids are their own space, nothing to do with item ids. The live upper
+// bound is whatever the loaded magic table holds; this is the hard cap every
+// entry point range-checks against first.
+#define ETERNALSONATA_MAGIC_ID_MIN 1
+#define ETERNALSONATA_MAGIC_ID_MAX 512
 
 // The slots, in the order the game's own equipment screen lists them. Which
 // items fit which slot is decided by the item's category (the same
@@ -89,6 +110,26 @@ enum {
   ETERNALSONATA_EQUIPMENT_SLOT_ARMOR = 1,      // category 2
   ETERNALSONATA_EQUIPMENT_SLOT_ACCESSORY1 = 2, // category 3
   ETERNALSONATA_EQUIPMENT_SLOT_ACCESSORY2 = 3  // category 3
+};
+
+// The magic slots, in the order the game stores them. Each is bound to one
+// kind: the even slots take light magic and the odd ones dark, and a slot will
+// not accept the other kind. The first pair is cast by pressing the attack
+// button and the second by holding it.
+enum {
+  ETERNALSONATA_MAGIC_SLOT_LIGHT_PRESS = 0,
+  ETERNALSONATA_MAGIC_SLOT_DARK_PRESS = 1,
+  ETERNALSONATA_MAGIC_SLOT_LIGHT_HOLD = 2,
+  ETERNALSONATA_MAGIC_SLOT_DARK_HOLD = 3
+};
+
+// A magic record's kind. Kind 1 is a placeholder the table carries for entries
+// that are not castable magic (Allegretto's first three records are the only
+// ones observed), and it never appears in a slot.
+enum {
+  ETERNALSONATA_MAGIC_KIND_NONE = 1,
+  ETERNALSONATA_MAGIC_KIND_LIGHT = 2,
+  ETERNALSONATA_MAGIC_KIND_DARK = 3
 };
 
 // Results. Everything >= 0 is success.
@@ -119,7 +160,18 @@ enum {
   ETERNALSONATA_EQUIPMENT_ERR_NOT_OWNED = -7,
   // The slot is already empty (unequip only).
   ETERNALSONATA_EQUIPMENT_ERR_SLOT_EMPTY = -8,
-  ETERNALSONATA_EQUIPMENT_ERR_INVALID_ARGUMENT = -10
+  ETERNALSONATA_EQUIPMENT_ERR_INVALID_ARGUMENT = -10,
+
+  // The magic id is outside 1..512, or past the end of the loaded magic table.
+  ETERNALSONATA_EQUIPMENT_ERR_INVALID_MAGIC = -11,
+  // The magic belongs to another character, or is a table entry that is not
+  // castable magic at all.
+  ETERNALSONATA_EQUIPMENT_ERR_MAGIC_NOT_OWNED = -12,
+  // The character is not high enough level to have learned it yet.
+  ETERNALSONATA_EQUIPMENT_ERR_MAGIC_NOT_LEARNED = -13,
+  // The magic is this character's and learned, but its kind does not match the
+  // slot: light magic only goes in the even slots and dark only in the odd.
+  ETERNALSONATA_EQUIPMENT_ERR_WRONG_MAGIC_KIND = -14
 };
 
 // One equipment slot: what is in it, and what that item contributes.
@@ -271,6 +323,112 @@ typedef int (*EternalSonataUnequipFn)(int character, int slot);
 // ETERNALSONATA_EQUIPMENT_QUEUED, or a negative error decided up front. A slot
 // that is already empty is skipped rather than being an error.
 typedef int (*EternalSonataUnequipAllFn)(int character);
+
+// ---------------------------------------------------------------------------
+// Magic
+// ---------------------------------------------------------------------------
+//
+// A character's four equipped magic ids sit at +0x24 of the same stat struct
+// the equipment ids are at, and everything about them comes out of a table of
+// its own: which character owns a magic, what kind it is, what level it is
+// learned at and what it costs to cast. A character never "acquires" magic the
+// way it acquires an item; it learns every entry the table gives it as it
+// levels, so the list a mod can choose from is a filter over that table rather
+// than a walk of the inventory, and nothing here touches the inventory or
+// recomputes a stat.
+
+// One magic, either in a slot or on its own. EternalSonataGetMagicInfo answers
+// with slot -1, since a table entry does not belong to a slot.
+typedef struct EternalSonataMagic {
+  // 1..10, the character that owns this magic. For a read of an empty slot,
+  // the character whose slot was read.
+  int32_t character;
+  // 0..3, one of the ETERNALSONATA_MAGIC_SLOT_* values, or -1 when this is a
+  // table entry rather than a slot.
+  int32_t slot;
+  // The magic in the slot, or 0 when the slot is empty. All the fields below
+  // are 0 in that case.
+  int32_t magic_id;
+  // Into the magic text blocks, equal to magic_id - 1. These are NOT the item
+  // blocks and the ids do not line up with item ids; resolve them with
+  // EternalSonataGetMagicName and EternalSonataGetMagicDescription.
+  int32_t name_text_id;
+  int32_t description_text_id;
+  // One of the ETERNALSONATA_MAGIC_KIND_* values.
+  int32_t kind;
+  // The character level this magic is learned at.
+  int32_t unlock_level;
+  // What casting it costs in echoes. A castable magic always costs at least 1.
+  int32_t echo_cost;
+  // The character's own ordinal for this entry, i.e. its index among that
+  // character's magic. Carried through because the game's screens key off it.
+  int32_t ordinal;
+
+  int32_t reserved[8];  // zero-filled; room for later additions
+} EternalSonataMagic;
+
+// Fills `out` with what `character` has in magic `slot`. An empty slot is not
+// an error: it answers OK with magic_id 0. Returns ETERNALSONATA_EQUIPMENT_OK
+// or a negative error.
+typedef int (*EternalSonataGetMagicFn)(int character, int slot, EternalSonataMagic* out);
+
+// Fills `out` with up to `max` of the character's magic slots, in slot order,
+// empty ones included, and returns how many were written, or a negative error.
+// Pass max = 0 to just count. There are always
+// ETERNALSONATA_MAGIC_SLOT_COUNT of them.
+typedef int (*EternalSonataGetAllMagicFn)(int character, EternalSonataMagic* out, int max);
+
+// The magic id in one slot, 0 when the slot is empty, or a negative error.
+typedef int (*EternalSonataGetEquippedMagicFn)(int character, int slot);
+
+// Fills `out` with a magic table entry, whoever it belongs to, with slot -1.
+// Returns ETERNALSONATA_EQUIPMENT_OK or a negative error.
+typedef int (*EternalSonataGetMagicInfoFn)(int magic_id, EternalSonataMagic* out);
+
+// The magic's name and description in the language the game is running in.
+// Never null: an id the blocks have nothing for answers "". The returned
+// pointer stays valid for the life of the process.
+typedef const char* (*EternalSonataGetMagicNameFn)(int magic_id);
+typedef const char* (*EternalSonataGetMagicDescriptionFn)(int magic_id);
+
+// Whether `character` has learned `magic_id`: 1 yes, 0 no, or a negative
+// error. Yes means the magic is this character's, is castable, and the
+// character's level is at or above its unlock level, which is exactly the test
+// the game's own list makes.
+typedef int (*EternalSonataHasLearnedMagicFn)(int character, int magic_id);
+
+// Whether EternalSonataSetMagic would be accepted right now, without changing
+// anything: ETERNALSONATA_EQUIPMENT_OK, or the error it would fail with
+// (MAGIC_NOT_OWNED, MAGIC_NOT_LEARNED, WRONG_MAGIC_KIND, ...).
+typedef int (*EternalSonataCanSetMagicFn)(int character, int slot, int magic_id);
+
+// Fills `ids_out` with up to `max` magic ids `character` could put in `slot`,
+// in the order the game's own list draws them, and returns how many were
+// written, or a negative error. Pass max = 0 to just count. Magic already in
+// another slot is included: unlike equipment, the same magic may sit in more
+// than one slot at once.
+typedef int (*EternalSonataGetAvailableMagicFn)(int character, int slot, int* ids_out, int max);
+
+// Whether the second pair of slots (LIGHT_HOLD and DARK_HOLD) can hold
+// something different from the first: 1 yes, 0 no, or a negative error. Early
+// in the game the game mirrors each press slot into the matching hold slot, so
+// a write to slot 0 or 1 also lands in slot 2 or 3 and a write to slot 2 or 3
+// is pointless. EternalSonataSetMagic reproduces that mirror rather than
+// fighting it, so a mod that wants the four independent should check this
+// first.
+typedef int (*EternalSonataAreMagicSlotsIndependentFn)(void);
+
+// Puts `magic_id` in `character`'s magic `slot`. Pass magic_id 0 to empty the
+// slot. While the game is still mirroring the pairs (see
+// EternalSonataAreMagicSlotsIndependent), writing slot 0 or 1 writes the
+// matching hold slot too. Returns ETERNALSONATA_EQUIPMENT_QUEUED, or a
+// negative error decided up front.
+typedef int (*EternalSonataSetMagicFn)(int character, int slot, int magic_id);
+
+// Empties all four of `character`'s magic slots. Returns
+// ETERNALSONATA_EQUIPMENT_QUEUED, or a negative error decided up front. A slot
+// that is already empty is skipped rather than being an error.
+typedef int (*EternalSonataClearMagicFn)(int character);
 
 #ifdef __cplusplus
 }  // extern "C"

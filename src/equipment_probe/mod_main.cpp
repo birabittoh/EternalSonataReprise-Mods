@@ -35,8 +35,23 @@
 //   * every error path the header declares (bad character, bad slot, bad item,
 //     NULL out, not equippable, wrong slot, not owned, slot empty), each on a
 //     button with the returned error code;
-//   * a log of both equipment events off the mod registry bus, cross-checked
-//     against what the probe itself observes by polling the forty slots once a
+//   * **the magic half of the same API**: all forty magic slots (ten
+//     characters times four), read the same sized-then-filled way, with their
+//     own invariants (the kind matching the slot, since light only goes in the
+//     even slots and dark only in the odd; text ids == magic_id - 1;
+//     EternalSonataHasLearnedMagic saying yes about something equipped;
+//     GetMagicInfo agreeing with the slot row about the same id), plus
+//     EternalSonataGetAvailableMagic for a chosen character and slot with every
+//     id re-checked through EternalSonataCanSetMagic, and SetMagic / ClearMagic
+//     buttons;
+//   * the **mirror check**, which is the magic equivalent of the preview
+//     self-test. While EternalSonataAreMagicSlotsIndependent answers 0 the game
+//     mirrors each press slot into the matching hold slot, so slots 0 and 2
+//     must hold the same id and so must 1 and 3. The probe checks that every
+//     frame and says which character broke it, which is the one way to notice
+//     that the host wrote past a mirror it should have reproduced;
+//   * a log of all three events off the mod registry bus, cross-checked
+//     against what the probe itself observes by polling the eighty slots once a
 //     frame.
 //
 // That last section is the one that actually tests the events rather than
@@ -48,11 +63,12 @@
 // without any event, so after one you press Reset baseline and the restored
 // state is adopted, moving the observed counts without a single added event.
 //
-// A save-and-reload check is worth doing here in particular. Equipment writes
-// into the stat structs the whole game reads and both of them are serialized
-// into the save, so the sequence that matters is: equip something, check the
-// game's own status screen agrees with this panel, save, reload, press Reset
-// baseline, and confirm the slot still holds it.
+// A save-and-reload check is worth doing here in particular. Equipment and
+// equipped magic both write into the stat structs the whole game reads and
+// both structs are serialized into the save, so the sequence that matters is:
+// equip something and set a magic, check the game's own equipment screen
+// agrees with this panel, save, reload, press Reset baseline, and confirm both
+// are still there.
 //
 // Polling every frame is fine: reading forty slots is a handful of guest
 // memory loads, and so is a preview, which is host-side arithmetic. Nothing
@@ -117,6 +133,31 @@ constexpr const char* kSlotNames[kSlotCount] = {"weapon", "armor", "accessory 1"
 // drifted apart.
 constexpr int kSlotCategory[kSlotCount] = {1, 2, 3, 3};
 
+constexpr int kMagicSlotCount = ETERNALSONATA_MAGIC_SLOT_COUNT;
+constexpr int kMagicSlotTotal = kCharacterMax * kMagicSlotCount;
+
+constexpr const char* kMagicSlotNames[kMagicSlotCount] = {"light (press)", "dark (press)",
+                                                          "light (hold)", "dark (hold)"};
+
+// The kind each magic slot takes: even light, odd dark. A row that disagrees
+// means the host let the wrong kind into a slot.
+constexpr int kMagicSlotKind[kMagicSlotCount] = {
+    ETERNALSONATA_MAGIC_KIND_LIGHT, ETERNALSONATA_MAGIC_KIND_DARK,
+    ETERNALSONATA_MAGIC_KIND_LIGHT, ETERNALSONATA_MAGIC_KIND_DARK};
+
+const char* MagicKindName(int kind) {
+  switch (kind) {
+    case ETERNALSONATA_MAGIC_KIND_NONE:
+      return "none";
+    case ETERNALSONATA_MAGIC_KIND_LIGHT:
+      return "light";
+    case ETERNALSONATA_MAGIC_KIND_DARK:
+      return "dark";
+    default:
+      return "?";
+  }
+}
+
 // Every entry point is resolved out of the host executable at load time and
 // null-checked before use, so this mod still loads (and says exactly what is
 // missing) on a host too old to have the Equipment API.
@@ -137,6 +178,23 @@ struct EquipmentApi {
   EternalSonataEquipFn equip = nullptr;
   EternalSonataUnequipFn unequip = nullptr;
   EternalSonataUnequipAllFn unequip_all = nullptr;
+
+  EternalSonataGetMagicFn get_magic = nullptr;
+  EternalSonataGetAllMagicFn get_all_magic = nullptr;
+  EternalSonataGetEquippedMagicFn get_equipped_magic = nullptr;
+  EternalSonataGetMagicInfoFn magic_info = nullptr;
+  EternalSonataGetMagicNameFn magic_name = nullptr;
+  EternalSonataGetMagicDescriptionFn magic_description = nullptr;
+  EternalSonataHasLearnedMagicFn has_learned = nullptr;
+  EternalSonataCanSetMagicFn can_set_magic = nullptr;
+  EternalSonataGetAvailableMagicFn available_magic = nullptr;
+  EternalSonataAreMagicSlotsIndependentFn magic_independent = nullptr;
+  EternalSonataSetMagicFn set_magic = nullptr;
+  EternalSonataClearMagicFn clear_magic = nullptr;
+
+  // The magic half is optional: a host that predates it still exercises
+  // everything above.
+  bool magic_ok() const { return get_all_magic && get_magic; }
 
   bool ok() const { return abi_version && available && get_equipment && get_all; }
 };
@@ -172,6 +230,18 @@ EquipmentApi LoadEquipmentApi() {
   Resolve(api.equip, "EternalSonataEquip");
   Resolve(api.unequip, "EternalSonataUnequip");
   Resolve(api.unequip_all, "EternalSonataUnequipAll");
+  Resolve(api.get_magic, "EternalSonataGetMagic");
+  Resolve(api.get_all_magic, "EternalSonataGetAllMagic");
+  Resolve(api.get_equipped_magic, "EternalSonataGetEquippedMagic");
+  Resolve(api.magic_info, "EternalSonataGetMagicInfo");
+  Resolve(api.magic_name, "EternalSonataGetMagicName");
+  Resolve(api.magic_description, "EternalSonataGetMagicDescription");
+  Resolve(api.has_learned, "EternalSonataHasLearnedMagic");
+  Resolve(api.can_set_magic, "EternalSonataCanSetMagic");
+  Resolve(api.available_magic, "EternalSonataGetAvailableMagic");
+  Resolve(api.magic_independent, "EternalSonataAreMagicSlotsIndependent");
+  Resolve(api.set_magic, "EternalSonataSetMagic");
+  Resolve(api.clear_magic, "EternalSonataClearMagic");
   return api;
 }
 
@@ -199,6 +269,14 @@ const char* ErrorName(int value) {
       return "ERR_SLOT_EMPTY";
     case ETERNALSONATA_EQUIPMENT_ERR_INVALID_ARGUMENT:
       return "ERR_INVALID_ARGUMENT";
+    case ETERNALSONATA_EQUIPMENT_ERR_INVALID_MAGIC:
+      return "ERR_INVALID_MAGIC";
+    case ETERNALSONATA_EQUIPMENT_ERR_MAGIC_NOT_OWNED:
+      return "ERR_MAGIC_NOT_OWNED";
+    case ETERNALSONATA_EQUIPMENT_ERR_MAGIC_NOT_LEARNED:
+      return "ERR_MAGIC_NOT_LEARNED";
+    case ETERNALSONATA_EQUIPMENT_ERR_WRONG_MAGIC_KIND:
+      return "ERR_WRONG_MAGIC_KIND";
     default:
       return "ERR_?";
   }
@@ -264,6 +342,8 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
     ImGui::Separator();
     DrawActionSection();
     ImGui::Separator();
+    DrawMagicSection();
+    ImGui::Separator();
     DrawErrorPathsSection();
     ImGui::Separator();
     DrawEventSection();
@@ -289,7 +369,7 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
                          "The host predates this mod's ABI version; the API surface may differ.");
     }
 
-    const char* missing[16];
+    const char* missing[32];
     int missing_count = 0;
     if (!api_.get_equipped) missing[missing_count++] = "GetEquippedItem";
     if (!api_.name) missing[missing_count++] = "GetEquipmentName";
@@ -303,6 +383,18 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
     if (!api_.equip) missing[missing_count++] = "Equip";
     if (!api_.unequip) missing[missing_count++] = "Unequip";
     if (!api_.unequip_all) missing[missing_count++] = "UnequipAll";
+    if (!api_.get_magic) missing[missing_count++] = "GetMagic";
+    if (!api_.get_all_magic) missing[missing_count++] = "GetAllMagic";
+    if (!api_.get_equipped_magic) missing[missing_count++] = "GetEquippedMagic";
+    if (!api_.magic_info) missing[missing_count++] = "GetMagicInfo";
+    if (!api_.magic_name) missing[missing_count++] = "GetMagicName";
+    if (!api_.magic_description) missing[missing_count++] = "GetMagicDescription";
+    if (!api_.has_learned) missing[missing_count++] = "HasLearnedMagic";
+    if (!api_.can_set_magic) missing[missing_count++] = "CanSetMagic";
+    if (!api_.available_magic) missing[missing_count++] = "GetAvailableMagic";
+    if (!api_.magic_independent) missing[missing_count++] = "AreMagicSlotsIndependent";
+    if (!api_.set_magic) missing[missing_count++] = "SetMagic";
+    if (!api_.clear_magic) missing[missing_count++] = "ClearMagic";
     if (missing_count) {
       std::string list;
       for (int i = 0; i < missing_count; ++i) {
@@ -560,6 +652,210 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
     }
   }
 
+  void DrawMagicSection() {
+    if (!api_.ok()) {
+      return;
+    }
+    if (!api_.magic_ok()) {
+      ImGui::TextColored(kWarn, "This host does not export the magic half of the Equipment API.");
+      return;
+    }
+
+    if (magic_read_result_ != ETERNALSONATA_EQUIPMENT_OK) {
+      ImGui::TextColored(kBad, "GetAllMagic refused the read: %s (%d)",
+                         ErrorName(magic_read_result_), magic_read_result_);
+      ImGui::TextWrapped(
+          "Nothing below can be checked while this is failing. ERR_UNAVAILABLE here while the "
+          "equipment half above is fine means the host is gating magic on something that is not "
+          "always mapped: the record count lives in an object the game frees when the menu comes "
+          "down, while the table itself is static and stays readable.");
+      return;
+    }
+
+    ImGui::Text("Magic: GetAllMagic sizing call: %s (expected %d)",
+                Answer(magic_sizing_count_, nullptr, nullptr).c_str(), kMagicSlotCount);
+    if (magic_sizing_count_ >= 0 && magic_sizing_count_ != kMagicSlotCount) {
+      ImGui::TextColored(kBad, "The sizing call disagrees with ETERNALSONATA_MAGIC_SLOT_COUNT.");
+    }
+
+    if (api_.magic_independent) {
+      const int independent = api_.magic_independent();
+      ImGui::Text("AreMagicSlotsIndependent: %s",
+                  Answer(independent, "yes, all four are free", "no, the pairs are mirrored")
+                      .c_str());
+      if (independent == 0) {
+        if (mirror_broken_ == 0) {
+          ImGui::TextColored(kGood, "Mirror holds: every character's slot 0 == 2 and 1 == 3.");
+        } else {
+          ImGui::TextColored(kBad, "Mirror BROKEN for %d character(s): %s", mirror_broken_,
+                             mirror_detail_.c_str());
+        }
+        ImGui::TextDisabled(
+            "While this is 0 the game mirrors each press slot into the matching hold slot, so a "
+            "write to slot 2 or 3 is pointless and a write to 0 or 1 must land in both.");
+      }
+    }
+
+    if (magic_cross_check_ok_) {
+      ImGui::TextDisabled(
+          "Magic reads cross-check: GetMagic(c, s), the GetAllMagic fill, GetEquippedMagic and "
+          "GetMagicInfo all agree.");
+    } else {
+      ImGui::TextColored(kBad,
+                         "Magic reads cross-check FAILED: some entry points disagree about the "
+                         "same slot.");
+    }
+
+    if (ImGui::BeginTable("magic", 8,
+                          ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg |
+                              ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingStretchProp,
+                          ImVec2(0, 260))) {
+      ImGui::TableSetupColumn("Character", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("Slot", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("Id", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("Kind", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("Lv", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("Echoes", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("Bad", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableHeadersRow();
+      ImGui::TableSetupScrollFreeze(0, 1);
+
+      for (int index = 0; index < kMagicSlotTotal; ++index) {
+        const EternalSonataMagic& row = magic_[index];
+        const unsigned bad = magic_violations_[index];
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::Text("%d %s", row.character,
+                    (row.character >= kCharacterMin && row.character <= kCharacterMax)
+                        ? kCharacterNames[row.character]
+                        : "?");
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted((row.slot >= 0 && row.slot < kMagicSlotCount)
+                                   ? kMagicSlotNames[row.slot]
+                                   : "?");
+        ImGui::TableNextColumn();
+        ImGui::Text("%d", row.magic_id);
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(row.magic_id && api_.magic_name ? api_.magic_name(row.magic_id)
+                                                               : "");
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(row.magic_id ? MagicKindName(row.kind) : "");
+        ImGui::TableNextColumn();
+        ImGui::Text("%d", row.unlock_level);
+        ImGui::TableNextColumn();
+        ImGui::Text("%d", row.echo_cost);
+        ImGui::TableNextColumn();
+        if (bad) {
+          ImGui::TextColored(kBad, "%03X", bad);
+        } else {
+          ImGui::TextDisabled("-");
+        }
+      }
+      ImGui::EndTable();
+    }
+    ImGui::TextDisabled(
+        "Violation bits: 001=character/slot field does not echo the request 002=empty slot has "
+        "nonzero derived fields 004=text ids != magic_id-1 008=kind wrong for this slot "
+        "010=HasLearnedMagic says no about something equipped 020=reserved words nonzero "
+        "040=GetMagic / GetEquippedMagic disagree with this row 080=GetMagicInfo disagrees about "
+        "the same id 100=the mirror is on but this hold slot differs from its press slot.");
+
+    ImGui::Separator();
+    ImGui::Text("GetAvailableMagic(character %d, slot %s): sized %d, filled %d", character_,
+                (magic_slot_ >= 0 && magic_slot_ < kMagicSlotCount) ? kMagicSlotNames[magic_slot_]
+                                                                    : "?",
+                available_magic_sizing_, available_magic_fill_);
+    if (available_magic_sizing_ >= 0 && available_magic_fill_ >= 0 &&
+        available_magic_sizing_ != available_magic_fill_) {
+      ImGui::TextColored(kBad, "The sizing call and the fill disagree.");
+    }
+    ImGui::SetNextItemWidth(120);
+    ImGui::InputInt("Magic slot", &magic_slot_);
+    ClampMagicSlot();
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(120);
+    ImGui::InputInt("Magic id", &magic_id_);
+    ClampMagicId();
+
+    if (available_magic_.empty()) {
+      ImGui::TextDisabled(
+          "(this character has learned no magic of this slot's kind yet; a character learns "
+          "magic purely by levelling, so nothing here depends on the inventory)");
+    } else if (ImGui::BeginTable("available_magic", 5,
+                                 ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg |
+                                     ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingStretchProp,
+                                 ImVec2(0, 160))) {
+      ImGui::TableSetupColumn("Id", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("Kind", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("Echoes", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("CanSetMagic", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableHeadersRow();
+      ImGui::TableSetupScrollFreeze(0, 1);
+      for (size_t i = 0; i < available_magic_.size(); ++i) {
+        const int id = available_magic_[i];
+        EternalSonataMagic info{};
+        const bool have_info =
+            api_.magic_info && api_.magic_info(id, &info) == ETERNALSONATA_EQUIPMENT_OK;
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::Text("%d", id);
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(api_.magic_name ? api_.magic_name(id) : "");
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(have_info ? MagicKindName(info.kind) : "?");
+        ImGui::TableNextColumn();
+        ImGui::Text("%d", have_info ? info.echo_cost : 0);
+        ImGui::TableNextColumn();
+        const int allowed =
+            api_.can_set_magic ? api_.can_set_magic(character_, magic_slot_, id) : 0;
+        if (allowed == ETERNALSONATA_EQUIPMENT_OK) {
+          ImGui::TextUnformatted("OK");
+        } else {
+          ImGui::TextColored(kBad, "%s", ErrorName(allowed));
+        }
+      }
+      ImGui::EndTable();
+    }
+
+    if (api_.magic_description && magic_id_ > 0) {
+      const char* text = api_.magic_description(magic_id_);
+      ImGui::TextWrapped("Magic %d: %s - %s", magic_id_,
+                         api_.magic_name ? api_.magic_name(magic_id_) : "", text ? text : "");
+    }
+
+    if (api_.can_set_magic && ImGui::Button("CanSetMagic?")) {
+      last_magic_result_ =
+          Result("CanSetMagic", api_.can_set_magic(character_, magic_slot_, magic_id_));
+    }
+    ImGui::SameLine();
+    if (api_.set_magic && ImGui::Button("SetMagic")) {
+      last_magic_result_ = Result("SetMagic", api_.set_magic(character_, magic_slot_, magic_id_));
+    }
+    ImGui::SameLine();
+    if (api_.set_magic && ImGui::Button("SetMagic(0) - empty the slot")) {
+      last_magic_result_ = Result("SetMagic(0)", api_.set_magic(character_, magic_slot_, 0));
+    }
+    ImGui::SameLine();
+    if (api_.clear_magic && ImGui::Button("ClearMagic")) {
+      last_magic_result_ = Result("ClearMagic", api_.clear_magic(character_));
+    }
+    ImGui::SameLine();
+    if (!available_magic_.empty() && api_.set_magic && ImGui::Button("Set the first available")) {
+      last_magic_result_ =
+          Result("SetMagic", api_.set_magic(character_, magic_slot_, available_magic_.front()));
+    }
+
+    if (!last_magic_result_.empty()) {
+      ImGui::TextUnformatted(last_magic_result_.c_str());
+      ImGui::TextDisabled(
+          "Nothing moves through the inventory here and no stat is recomputed: setting magic is "
+          "a halfword write, so the only thing to watch is that the right slot changed and, "
+          "while the pairs are mirrored, that its partner changed with it.");
+    }
+  }
+
   void DrawErrorPathsSection() {
     if (!api_.ok()) {
       return;
@@ -621,6 +917,38 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
       last_error_result_ = Result("Unequip(1, 4)", api_.unequip(1, 4));
     }
 
+    if (api_.magic_ok()) {
+      if (api_.get_magic && ImGui::Button("GetMagic(1, 4)")) {
+        EternalSonataMagic magic_scratch{};
+        last_error_result_ = Result("GetMagic(1, 4)", api_.get_magic(1, 4, &magic_scratch));
+      }
+      ImGui::SameLine();
+      if (api_.get_magic && ImGui::Button("GetMagic(1, 0, NULL)")) {
+        last_error_result_ = Result("GetMagic(1, 0, NULL)", api_.get_magic(1, 0, nullptr));
+      }
+      ImGui::SameLine();
+      if (api_.set_magic && ImGui::Button("SetMagic(1, 0, 9999)")) {
+        last_error_result_ = Result("SetMagic(1, 0, 9999)", api_.set_magic(1, 0, 9999));
+      }
+      ImGui::SameLine();
+      if (api_.set_magic && ImGui::Button("SetMagic into the wrong kind")) {
+        // Whatever fits the light slot, pushed into the dark one next to it.
+        const int light = FirstAvailableMagic(character_, 0);
+        last_error_result_ =
+            light > 0 ? Result("SetMagic(light into a dark slot)",
+                               api_.set_magic(character_, 1, light))
+                      : std::string("this character has no light magic to try it with");
+      }
+      if (api_.set_magic && ImGui::Button("SetMagic somebody else's magic")) {
+        const int other = ForeignMagic(character_);
+        last_error_result_ =
+            other > 0
+                ? Result("SetMagic(another character's magic)",
+                         api_.set_magic(character_, 0, other))
+                : std::string("no other character's magic could be found to try it with");
+      }
+    }
+
     if (!last_error_result_.empty()) {
       ImGui::TextUnformatted(last_error_result_.c_str());
       ImGui::TextDisabled(
@@ -631,8 +959,8 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
   }
 
   void DrawEventSection() {
-    ImGui::Text("Equipment events: %d equipped, %d unequipped", event_equipped_.load(),
-                event_unequipped_.load());
+    ImGui::Text("Equipment events: %d equipped, %d unequipped, %d magic set",
+                event_equipped_.load(), event_unequipped_.load(), event_magic_.load());
     ImGui::SameLine();
     if (ImGui::SmallButton("Clear log")) {
       std::lock_guard<std::mutex> lock(events_mutex_);
@@ -641,9 +969,12 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
 
     const bool equipped_ok = observed_equipped_ == event_equipped_.load();
     const bool unequipped_ok = observed_unequipped_ == event_unequipped_.load();
-    ImGui::Text("Probe observed:   %d equipped, %d unequipped", observed_equipped_,
-                observed_unequipped_);
-    if (equipped_ok && unequipped_ok) {
+    // Only compared when the host has the magic half; on an older host the
+    // probe observes nothing there and the counter stays at zero anyway.
+    const bool magic_ok = !api_.magic_ok() || observed_magic_ == event_magic_.load();
+    ImGui::Text("Probe observed:   %d equipped, %d unequipped, %d magic set", observed_equipped_,
+                observed_unequipped_, observed_magic_);
+    if (equipped_ok && unequipped_ok && magic_ok) {
       ImGui::TextColored(kGood, "Events match what the probe observed.");
     } else {
       ImGui::TextColored(kBad,
@@ -653,6 +984,7 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
     if (ImGui::SmallButton("Reset baseline")) {
       PushEvent("baseline reset: current state adopted");
       have_baseline_ = false;
+      have_magic_baseline_ = false;
     }
     ImGui::SameLine();
     ImGui::TextDisabled(
@@ -702,11 +1034,163 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
       }
     }
 
+    PollMagic();
+
     CheckInvariants();
     CrossCheckReads();
     CheckPreview();
     PollEquippable();
     ObserveTransitions();
+  }
+
+  void PollMagic() {
+    magic_sizing_count_ = -1;
+    available_magic_.clear();
+    available_magic_sizing_ = -1;
+    available_magic_fill_ = -1;
+    magic_ = {};
+    magic_violations_ = {};
+    magic_cross_check_ok_ = true;
+    mirror_broken_ = 0;
+    mirror_detail_.clear();
+    if (!api_.magic_ok()) {
+      return;
+    }
+
+    magic_sizing_count_ = api_.get_all_magic(character_, nullptr, 0);
+    if (magic_sizing_count_ >= 0 && magic_sizing_count_ != kMagicSlotCount) {
+      magic_cross_check_ok_ = false;
+    }
+
+    magic_read_result_ = ETERNALSONATA_EQUIPMENT_OK;
+    for (int character = kCharacterMin; character <= kCharacterMax; ++character) {
+      EternalSonataMagic filled[kMagicSlotCount];
+      std::memset(filled, 0, sizeof(filled));
+      const int written = api_.get_all_magic(character, filled, kMagicSlotCount);
+      if (written != kMagicSlotCount) {
+        magic_read_result_ = written;
+        continue;
+      }
+      for (int slot = 0; slot < kMagicSlotCount; ++slot) {
+        magic_[static_cast<size_t>(MagicIndex(character, slot))] = filled[slot];
+      }
+    }
+
+    // A refused read is a state to report, not forty rows of violations: the
+    // invariants below would all fail on the zeroed rows and say nothing about
+    // what actually went wrong.
+    if (magic_read_result_ != ETERNALSONATA_EQUIPMENT_OK) {
+      return;
+    }
+
+    CheckMagicInvariants();
+    CheckMirror();
+
+    if (api_.available_magic) {
+      available_magic_sizing_ = api_.available_magic(character_, magic_slot_, nullptr, 0);
+      if (available_magic_sizing_ > 0) {
+        available_magic_.resize(static_cast<size_t>(available_magic_sizing_));
+        available_magic_fill_ = api_.available_magic(character_, magic_slot_,
+                                                     available_magic_.data(),
+                                                     available_magic_sizing_);
+        if (available_magic_fill_ < 0) {
+          available_magic_.clear();
+        } else {
+          available_magic_.resize(static_cast<size_t>(available_magic_fill_));
+        }
+      } else {
+        available_magic_fill_ = available_magic_sizing_;
+      }
+    }
+  }
+
+  void CheckMagicInvariants() {
+    for (int character = kCharacterMin; character <= kCharacterMax; ++character) {
+      for (int slot = 0; slot < kMagicSlotCount; ++slot) {
+        const size_t index = static_cast<size_t>(MagicIndex(character, slot));
+        const EternalSonataMagic& row = magic_[index];
+        unsigned v = 0;
+
+        if (row.character != character || row.slot != slot) {
+          v |= 1u << 0;
+        }
+        if (row.magic_id == 0) {
+          if (row.name_text_id || row.description_text_id || row.kind || row.unlock_level ||
+              row.echo_cost || row.ordinal) {
+            v |= 1u << 1;
+          }
+        } else {
+          if (row.name_text_id != row.magic_id - 1 ||
+              row.description_text_id != row.magic_id - 1) {
+            v |= 1u << 2;
+          }
+          if (row.kind != kMagicSlotKind[slot]) {
+            v |= 1u << 3;
+          }
+          if (api_.has_learned && api_.has_learned(character, row.magic_id) != 1) {
+            v |= 1u << 4;
+          }
+        }
+        for (int r = 0; r < 8; ++r) {
+          if (row.reserved[r] != 0) {
+            v |= 1u << 5;
+            break;
+          }
+        }
+
+        EternalSonataMagic directly{};
+        if (api_.get_magic(character, slot, &directly) != ETERNALSONATA_EQUIPMENT_OK ||
+            std::memcmp(&directly, &row, sizeof(EternalSonataMagic)) != 0) {
+          v |= 1u << 6;
+          magic_cross_check_ok_ = false;
+        }
+        if (api_.get_equipped_magic &&
+            api_.get_equipped_magic(character, slot) != row.magic_id) {
+          v |= 1u << 6;
+          magic_cross_check_ok_ = false;
+        }
+        // GetMagicInfo answers about the id alone, so everything but the
+        // character and the slot has to be the same as the slot row's.
+        if (row.magic_id != 0 && api_.magic_info) {
+          EternalSonataMagic info{};
+          if (api_.magic_info(row.magic_id, &info) != ETERNALSONATA_EQUIPMENT_OK ||
+              info.slot != -1 || info.character != character || info.magic_id != row.magic_id ||
+              info.kind != row.kind || info.unlock_level != row.unlock_level ||
+              info.echo_cost != row.echo_cost || info.ordinal != row.ordinal) {
+            v |= 1u << 7;
+            magic_cross_check_ok_ = false;
+          }
+        }
+
+        magic_violations_[index] = v;
+      }
+    }
+  }
+
+  // While the pairs are mirrored the hold slots must be copies of the press
+  // slots. This is the magic half's headline check: it is the one behaviour of
+  // the game's own commit that the host reimplements rather than calls.
+  void CheckMirror() {
+    if (!api_.magic_independent || api_.magic_independent() != 0) {
+      return;
+    }
+    for (int character = kCharacterMin; character <= kCharacterMax; ++character) {
+      bool broken = false;
+      for (int slot = 0; slot < 2; ++slot) {
+        const size_t press = static_cast<size_t>(MagicIndex(character, slot));
+        const size_t hold = static_cast<size_t>(MagicIndex(character, slot + 2));
+        if (magic_[press].magic_id != magic_[hold].magic_id) {
+          magic_violations_[hold] |= 1u << 8;
+          broken = true;
+        }
+      }
+      if (broken) {
+        ++mirror_broken_;
+        if (mirror_detail_.empty()) {
+          mirror_detail_ = kCharacterNames[character];
+        }
+      }
+    }
   }
 
   void CheckInvariants() {
@@ -872,11 +1356,45 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
     for (int i = 0; i < kSlotTotal; ++i) {
       now[static_cast<size_t>(i)] = slots_[i].item_id;
     }
+    std::array<int, kMagicSlotTotal> now_magic{};
+    for (int i = 0; i < kMagicSlotTotal; ++i) {
+      now_magic[static_cast<size_t>(i)] = magic_[static_cast<size_t>(i)].magic_id;
+    }
 
     if (!have_baseline_) {
       have_baseline_ = true;
       last_worn_ = now;
+      last_magic_ = now_magic;
       return;
+    }
+
+    // The magic slots have a baseline of their own, because a read can be
+    // refused (leaving the rows zeroed) while the equipment half keeps
+    // working. Adopting on the way back in stops that from being reported as
+    // forty slots being cleared and then set again.
+    if (!api_.magic_ok() || magic_read_result_ != ETERNALSONATA_EQUIPMENT_OK) {
+      have_magic_baseline_ = false;
+    } else if (!have_magic_baseline_) {
+      have_magic_baseline_ = true;
+      last_magic_ = now_magic;
+    } else {
+      for (int character = kCharacterMin; character <= kCharacterMax; ++character) {
+        for (int slot = 0; slot < kMagicSlotCount; ++slot) {
+          const size_t index = static_cast<size_t>(MagicIndex(character, slot));
+          if (last_magic_[index] == now_magic[index]) {
+            continue;
+          }
+          // One event per slot with the new id, mirroring what the host
+          // publishes; an emptied slot is an event with id 0.
+          ++observed_magic_;
+          char line[160];
+          std::snprintf(line, sizeof(line), "observed  magic set  %s %s: magic %d",
+                        kCharacterNames[character], kMagicSlotNames[slot],
+                        now_magic[index]);
+          PushEvent(line);
+        }
+      }
+      last_magic_ = now_magic;
     }
 
     for (int character = kCharacterMin; character <= kCharacterMax; ++character) {
@@ -914,6 +1432,10 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
     return (character - kCharacterMin) * kSlotCount + slot;
   }
 
+  static int MagicIndex(int character, int slot) {
+    return (character - kCharacterMin) * kMagicSlotCount + slot;
+  }
+
   void ClampCharacter() {
     if (character_ < kCharacterMin) character_ = kCharacterMin;
     if (character_ > kCharacterMax) character_ = kCharacterMax;
@@ -927,6 +1449,45 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
     if (item_id_ > ETERNALSONATA_EQUIPMENT_ITEM_ID_MAX) {
       item_id_ = ETERNALSONATA_EQUIPMENT_ITEM_ID_MAX;
     }
+  }
+
+  void ClampMagicSlot() {
+    if (magic_slot_ < 0) magic_slot_ = 0;
+    if (magic_slot_ >= kMagicSlotCount) magic_slot_ = kMagicSlotCount - 1;
+  }
+  void ClampMagicId() {
+    if (magic_id_ < 0) magic_id_ = 0;
+    if (magic_id_ > ETERNALSONATA_MAGIC_ID_MAX) {
+      magic_id_ = ETERNALSONATA_MAGIC_ID_MAX;
+    }
+  }
+
+  // The first magic `character` could put in `slot`, for the error-path
+  // buttons that need a real id to misuse.
+  int FirstAvailableMagic(int character, int slot) const {
+    if (!api_.available_magic) {
+      return 0;
+    }
+    int ids[32];
+    const int count = api_.available_magic(character, slot, ids, 32);
+    return count > 0 ? ids[0] : 0;
+  }
+
+  // Magic that belongs to some other character, for the MAGIC_NOT_OWNED path.
+  int ForeignMagic(int character) const {
+    if (!api_.available_magic) {
+      return 0;
+    }
+    for (int other = kCharacterMin; other <= kCharacterMax; ++other) {
+      if (other == character) {
+        continue;
+      }
+      const int id = FirstAvailableMagic(other, 0);
+      if (id > 0) {
+        return id;
+      }
+    }
+    return 0;
   }
 
   // The first spare item that fits `slot` on `character`, for the error-path
@@ -1006,6 +1567,16 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
                                         static_cast<int>(payload.f64));
                           PushEvent(line);
                         });
+    registry->Subscribe(ETERNALSONATA_EQUIPMENT_EVENT_MAGIC_SET,
+                        [this](const rex::system::ModRegistry::EventPayload& payload) {
+                          event_magic_.fetch_add(1);
+                          char line[160];
+                          std::snprintf(line, sizeof(line),
+                                        "event     magic set  character %llu, magic %d",
+                                        static_cast<unsigned long long>(payload.u64),
+                                        static_cast<int>(payload.f64));
+                          PushEvent(line);
+                        });
   }
 
   void PushEvent(const char* line) {
@@ -1034,23 +1605,42 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
   int equippable_fill_ = -1;
   std::vector<int> equippable_;
 
+  int magic_sizing_count_ = -1;
+  int magic_read_result_ = ETERNALSONATA_EQUIPMENT_OK;
+  std::array<EternalSonataMagic, kMagicSlotTotal> magic_{};
+  std::array<unsigned, kMagicSlotTotal> magic_violations_{};
+  bool magic_cross_check_ok_ = false;
+  int mirror_broken_ = 0;
+  std::string mirror_detail_;
+
+  int available_magic_sizing_ = -1;
+  int available_magic_fill_ = -1;
+  std::vector<int> available_magic_;
+
   int character_ = 1;  // Allegretto
   int slot_ = 0;       // weapon
   int item_id_ = 1;    // Hunting Knife, his starting weapon
+  int magic_slot_ = 0;  // light, cast by pressing
+  int magic_id_ = 0;
   std::string last_write_result_;
   std::string last_error_result_;
+  std::string last_magic_result_;
 
   // The probe's own transition counters, draw-thread only.
   bool have_baseline_ = false;
+  bool have_magic_baseline_ = false;
   std::array<int, kSlotTotal> last_worn_{};
+  std::array<int, kMagicSlotTotal> last_magic_{};
   int observed_equipped_ = 0;
   int observed_unequipped_ = 0;
+  int observed_magic_ = 0;
 
   // Events, written by the registry tick.
   std::mutex events_mutex_;
   std::deque<std::string> events_;
   std::atomic<int> event_equipped_{0};
   std::atomic<int> event_unequipped_{0};
+  std::atomic<int> event_magic_{0};
 };
 
 class EquipmentProbeMod : public rex::system::IModPlugin {
