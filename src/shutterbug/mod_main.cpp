@@ -115,6 +115,7 @@ class ShutterbugMod : public rex::system::IModPlugin {
 
     auto* registry = runtime_ ? runtime_->mod_registry() : nullptr;
     if (!registry) {
+      REXLOG_WARN("[shutterbug] no mod registry; nothing will count");
       return;
     }
     registry->RegisterTick([this] { Tick(); });

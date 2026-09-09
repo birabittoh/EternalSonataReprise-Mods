@@ -26,6 +26,7 @@ jobs:
           - linux-arm64
           - mac-x64
           - mac-arm64
+          - android-arm64
         include:
           - platform: windows-x64
             runner: windows-latest
@@ -47,6 +48,12 @@ jobs:
             runner: macos-15
             sdk_subdir: mac-arm64
 
+          # Cross-built with the NDK the runner already ships at
+          # $ANDROID_NDK_HOME, so no clang install step here.
+          - platform: android-arm64
+            runner: ubuntu-latest
+            sdk_subdir: android-arm64
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -58,6 +65,10 @@ jobs:
           sudo apt-get install -y ninja-build
           sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-20 200
           sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-20 200
+
+      - name: Install Ninja (Android)
+        if: matrix.platform == 'android-arm64'
+        run: sudo apt-get install -y ninja-build
 
       - name: Install LLVM, CMake, Ninja (Windows)
         if: matrix.platform == 'windows-x64'
@@ -121,6 +132,7 @@ jobs:
             --input raw/raw-mods-linux-arm64 \
             --input raw/raw-mods-mac-x64 \
             --input raw/raw-mods-mac-arm64 \
+            --input raw/raw-mods-android-arm64 \
             --output pkg \
             --write-mod-list mods.json \
             --merged-output merged

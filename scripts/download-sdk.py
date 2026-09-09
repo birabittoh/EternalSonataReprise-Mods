@@ -124,7 +124,8 @@ def main():
     )
     parser.add_argument(
         "--platform",
-        choices=["win-amd64", "linux-amd64", "linux-arm64", "mac-amd64", "mac-arm64"],
+        choices=["win-amd64", "linux-amd64", "linux-arm64", "mac-amd64", "mac-arm64",
+                 "android-arm64"],
         help="Override the auto-detected platform (e.g. to fetch the win-amd64 SDK "
              "from a Linux cross-build container)"
     )
