@@ -99,6 +99,10 @@ class ShutterbugMod : public rex::system::IModPlugin {
     };
 
     EternalSonataCustomAchievementData data = {};
+    // Naming the mod and the achievement is what lets anyone else translate it,
+    // as achv_name_shutterbug_five_photos and friends.
+    data.mod_id = "shutterbug";
+    data.key = "five_photos";
     data.name = "Shutterbug";
     data.description = "Take five photographs in a single battle.";
     data.gamerscore = 50;
