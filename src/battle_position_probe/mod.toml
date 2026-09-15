@@ -1,0 +1,8 @@
+manifest_version = 2
+name = "Battle Position Probe"
+version = "1.0.0"
+game_version = "1.1.4"
+author = "Marco"
+description = "Inspect and move every battle party member and enemy with an F10 overlay."
+code = "battle_position_probe"
+platform = "windows-x64"

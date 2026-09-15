@@ -43,6 +43,37 @@ extern "C" {
 // version; existing entry points keep their signature.
 #define ETERNALSONATA_BATTLE_ABI_VERSION 2u
 
+// Battle action events on the shared mod registry bus. Each carries an
+// EternalSonataBattleAction in payload.bytes. payload.u64 is action_id and
+// payload.f64 is distance, for listeners that only need the common value.
+// The byte span is valid only during the callback, so retain a copy if needed.
+#define ETERNALSONATA_BATTLE_EVENT_ATTACK "eternalsonata.battle.attack"
+#define ETERNALSONATA_BATTLE_EVENT_ABILITY "eternalsonata.battle.ability"
+#define ETERNALSONATA_BATTLE_EVENT_ITEM "eternalsonata.battle.item"
+#define ETERNALSONATA_BATTLE_EVENT_DAMAGE "eternalsonata.battle.damage"
+#define ETERNALSONATA_BATTLE_EVENT_HEAL "eternalsonata.battle.heal"
+#define ETERNALSONATA_BATTLE_EVENT_CRITICAL "eternalsonata.battle.critical"
+#define ETERNALSONATA_BATTLE_EVENT_PARRY "eternalsonata.battle.parry"
+#define ETERNALSONATA_BATTLE_EVENT_HARMONY_CHAIN "eternalsonata.battle.harmony_chain"
+#define ETERNALSONATA_BATTLE_EVENT_COUNTERATTACK "eternalsonata.battle.counterattack"
+
+// Per-unit condition events, one per unit per change. Unlike the action events
+// above these are observed rather than intercepted: the host samples every live
+// unit once per battle frame and reports what moved, so a change the game makes
+// for any reason at all is reported, including the end-of-turn expiry passes
+// and anything a mod does itself.
+//
+// STATUS_GAINED / STATUS_LOST carry an EternalSonataBattleStatus, with
+// payload.u64 the status id. STAT_CHANGED carries an
+// EternalSonataBattleStatChange, with payload.u64 the stat id and payload.f64
+// the delta. DOWN / REVIVED carry an EternalSonataBattleDown, with payload.u64
+// the slot and payload.f64 the current HP.
+#define ETERNALSONATA_BATTLE_EVENT_STATUS_GAINED "eternalsonata.battle.status_gained"
+#define ETERNALSONATA_BATTLE_EVENT_STATUS_LOST "eternalsonata.battle.status_lost"
+#define ETERNALSONATA_BATTLE_EVENT_STAT_CHANGED "eternalsonata.battle.stat_changed"
+#define ETERNALSONATA_BATTLE_EVENT_DOWN "eternalsonata.battle.down"
+#define ETERNALSONATA_BATTLE_EVENT_REVIVED "eternalsonata.battle.revived"
+
 // Results. Everything >= 0 is success.
 enum {
   ETERNALSONATA_BATTLE_OK = 0,
@@ -79,6 +110,140 @@ enum {
 
 // The per-unit FSM value the game returns for "no such unit".
 #define ETERNALSONATA_BATTLE_UNIT_STATE_NONE 101
+
+enum {
+  ETERNALSONATA_BATTLE_LIGHT_UNKNOWN = 0,
+  ETERNALSONATA_BATTLE_LIGHT = 1,
+  ETERNALSONATA_BATTLE_DARK = 2
+};
+
+enum {
+  ETERNALSONATA_BATTLE_RANGE_UNKNOWN = 0,
+  ETERNALSONATA_BATTLE_RANGE_NEAR = 1,
+  ETERNALSONATA_BATTLE_RANGE_FAR = 2
+};
+
+// Immutable action data copied into an event payload. action_id is the exact
+// move record selected by the game for ATTACK and ABILITY, so attacks selected
+// from different ranges remain distinct. It is an item id for ITEM. distance
+// is negative when the action does not expose a target distance.
+typedef struct EternalSonataBattleAction {
+  int32_t actor_kind;
+  int32_t actor_slot;
+  int32_t character;
+  int32_t action_id;
+  int32_t light_state;
+  int32_t range;
+  float distance;
+  int32_t ability_strength;
+  int32_t harmony_chain;
+  int32_t counterattack;
+  int32_t reserved[2];
+} EternalSonataBattleAction;
+
+enum {
+  ETERNALSONATA_BATTLE_EFFECT_CRITICAL = 1 << 0,
+  ETERNALSONATA_BATTLE_EFFECT_PARRIED = 1 << 1,
+  ETERNALSONATA_BATTLE_EFFECT_HARMONY_CHAIN = 1 << 2,
+  ETERNALSONATA_BATTLE_EFFECT_COUNTERATTACK = 1 << 3
+};
+
+typedef struct EternalSonataBattleEffect {
+  int32_t source_kind;
+  int32_t source_slot;
+  int32_t source_character;
+  int32_t target_kind;
+  int32_t target_slot;
+  int32_t target_character;
+  int32_t action_id;
+  int32_t amount;
+  int32_t flags;
+  int32_t ability_strength;
+  int32_t reserved[6];
+} EternalSonataBattleEffect;
+
+// Status ailments are one bit each in a per-unit mask, ids 0 through 9. The
+// game addresses them by this id everywhere: sub_8218CEF8 sets the bit,
+// sub_8218D140 clears it, sub_82190798 tests it, and the ability and item
+// effect records name one as `id + 1`.
+//
+// The ids are deliberately NOT given names here. Which id is poison and which
+// is darkness has not been established from the executable, and a mod carrying
+// a guessed table would be wrong in a way nothing would catch. What IS known,
+// from the game's own code, is behavioural:
+//
+//   0..3  mutually exclusive. Applying any one of them clears whichever of the
+//         four was already up (sub_8218CD88 picks it), and the four share one
+//         expiry counter, so they are the "incapacitated" family.
+//   4, 5  share an expiry counter with each other.
+//   6..9  one expiry counter each.
+//      9  halves the afflicted party member's action rate while it is up, and
+//         restores it on removal (sub_8218D408 / sub_8218D140 pass 0.5 and 1.0
+//         to sub_821A4EB0).
+//
+// Every one of the ten expires by itself after four of the afflicted unit's
+// turns, unless equipment grants immunity (sub_821A4830).
+#define ETERNALSONATA_BATTLE_STATUS_COUNT 10
+
+// The three stats an ability is allowed to buff or debuff mid-battle, and the
+// only three the host watches. The game clamps each to within 30% of the
+// unit's pristine value, so a reported change is always inside that band.
+enum {
+  ETERNALSONATA_BATTLE_STAT_ATTACK = 0,
+  ETERNALSONATA_BATTLE_STAT_DEFENSE = 1,
+  ETERNALSONATA_BATTLE_STAT_SPEED = 2
+};
+
+// source_* on all three structs below is whichever unit held the turn when the
+// change was seen, as a best-effort attribution: the host samples state rather
+// than intercepting the ability, so a change that lands outside anyone's turn
+// (an end-of-turn expiry, say) reports ETERNALSONATA_BATTLE_ACTOR_NONE and a
+// slot of -1 rather than blaming the previous actor.
+typedef struct EternalSonataBattleStatus {
+  int32_t target_kind;
+  int32_t target_slot;
+  int32_t target_character;
+  int32_t status;  // 0 .. ETERNALSONATA_BATTLE_STATUS_COUNT - 1
+  // The unit's whole status mask as it stands after the change, so a listener
+  // can see the rest of what is on the unit without a second call.
+  int32_t status_mask;
+  int32_t gained;  // 1 on STATUS_GAINED, 0 on STATUS_LOST
+  int32_t source_kind;
+  int32_t source_slot;
+  int32_t source_character;
+  int32_t reserved[3];
+} EternalSonataBattleStatus;
+
+typedef struct EternalSonataBattleStatChange {
+  int32_t target_kind;
+  int32_t target_slot;
+  int32_t target_character;
+  int32_t stat;  // ETERNALSONATA_BATTLE_STAT_*
+  int32_t previous;
+  int32_t current;
+  int32_t delta;  // current - previous; negative for a debuff
+  int32_t source_kind;
+  int32_t source_slot;
+  int32_t source_character;
+  int32_t reserved[2];
+} EternalSonataBattleStatChange;
+
+// DOWN fires when a unit stops counting as standing, which for a party member
+// is the game's own KO and for an enemy is its death. REVIVED fires on the way
+// back. Both use the same liveness test EternalSonataBattleUnit::alive reports,
+// so the two never disagree.
+typedef struct EternalSonataBattleDown {
+  int32_t target_kind;
+  int32_t target_slot;
+  int32_t target_character;
+  int32_t hp;
+  int32_t hp_max;
+  int32_t status_mask;
+  int32_t source_kind;
+  int32_t source_slot;
+  int32_t source_character;
+  int32_t reserved[3];
+} EternalSonataBattleDown;
 
 // The battle state machine's states run 1..23. The ones worth naming:
 //
@@ -182,8 +347,20 @@ typedef struct EternalSonataBattleUnit {
   // the slot to EternalSonataGetBattleEnemyName rather than using this
   // directly. Party: 0, since `character` already identifies those.
   int32_t name_id;
-  int32_t reserved[4];  // zero-filled; room for later additions
+  // The unit's status ailments, one bit per status id; see
+  // ETERNALSONATA_BATTLE_STATUS_COUNT. 0 when the unit is clean.
+  int32_t status_mask;
+  int32_t reserved[3];  // zero-filled; room for later additions
 } EternalSonataBattleUnit;
+
+// A point in the battle scene, in the same units and axes the overworld API's
+// EternalSonataFieldPosition uses: the two sides share one scene graph, and a
+// battle runs with the field still loaded underneath it.
+typedef struct EternalSonataBattlePosition {
+  float x;
+  float y;
+  float z;
+} EternalSonataBattlePosition;
 
 // ---------------------------------------------------------------------------
 // Capability and state
@@ -337,6 +514,45 @@ typedef int (*EternalSonataSetBattleEnemyHpFn)(int slot, int32_t hp);
 // This is a plain memory write (one dword into the FSM state field) and takes
 // effect on the next guest frame.
 typedef int (*EternalSonataSkipBattleTurnFn)(void);
+
+// ---------------------------------------------------------------------------
+// Unit positions
+// ---------------------------------------------------------------------------
+//
+// Where a unit is standing, for either side. `side` is
+// ETERNALSONATA_BATTLE_ACTOR_PARTY or ETERNALSONATA_BATTLE_ACTOR_ENEMY and
+// `slot` is 0-based within that side, the same pair
+// EternalSonataGetBattlePartyUnit / EternalSonataGetBattleEnemy take.
+//
+// Both sides' records carry a scene node id, and the battle shares its scene
+// graph with the field, so this is the same transform the overworld API reads
+// and writes for the field leader.
+//
+// The value is a snapshot taken once per guest frame, right after the battle
+// state machine has run, so it already includes the frame's movement.
+// Returns ETERNALSONATA_BATTLE_OK, ETERNALSONATA_BATTLE_ERR_UNAVAILABLE with
+// `out` zeroed when no battle is in progress, or
+// ETERNALSONATA_BATTLE_ERR_INVALID_SLOT (also for a unit whose node is not
+// resolvable yet, which happens for a frame or two around battle start).
+typedef int (*EternalSonataGetBattleUnitPositionFn)(
+    int side, int slot, EternalSonataBattlePosition* out);
+
+// Moves a unit. Queued onto the guest thread and applied on the next guest
+// frame, the same way the overworld API's position setter is.
+//
+// The game keeps driving the unit: attack approaches, knockback and the
+// end-of-turn repositioning pass all write the same transform, so a single
+// call reads as a nudge that the unit walks back from. Call it every frame to
+// pin a unit somewhere. Nothing here touches collision or the battle's own
+// idea of who is in range, so a unit moved out of the arena will still act
+// normally, just from further away.
+//
+// Returns ETERNALSONATA_BATTLE_QUEUED when accepted,
+// ETERNALSONATA_BATTLE_ERR_UNAVAILABLE outside a battle,
+// ETERNALSONATA_BATTLE_ERR_INVALID_SLOT, or
+// ETERNALSONATA_BATTLE_ERR_INVALID_ARGUMENT for a null or non-finite position.
+typedef int (*EternalSonataSetBattleUnitPositionFn)(
+    int side, int slot, const EternalSonataBattlePosition* position);
 
 #ifdef __cplusplus
 }  // extern "C"
