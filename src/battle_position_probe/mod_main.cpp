@@ -43,6 +43,8 @@ struct BattleApi {
   EternalSonataGetBattleEnemyNameFn enemy_name = nullptr;
   EternalSonataGetBattleUnitPositionFn get_position = nullptr;
   EternalSonataSetBattleUnitPositionFn set_position = nullptr;
+  EternalSonataGetBattleUnitFacingFn get_facing = nullptr;
+  EternalSonataSetBattleUnitFacingFn set_facing = nullptr;
 
   BattleApi() {
     Resolve(version, "EternalSonataBattleAbiVersion");
@@ -53,9 +55,12 @@ struct BattleApi {
     Resolve(enemy_name, "EternalSonataGetBattleEnemyName");
     Resolve(get_position, "EternalSonataGetBattleUnitPosition");
     Resolve(set_position, "EternalSonataSetBattleUnitPosition");
+    Resolve(get_facing, "EternalSonataGetBattleUnitFacing");
+    Resolve(set_facing, "EternalSonataSetBattleUnitFacing");
   }
 
   bool ready() const { return get_position && set_position; }
+  bool facing_ready() const { return get_facing && set_facing; }
 };
 
 class BattlePositionDialog : public rex::ui::ImGuiDialog {
@@ -140,9 +145,13 @@ class BattlePositionDialog : public rex::ui::ImGuiDialog {
       const bool selected = side_ == side && slot_ == slot;
       char row[160];
       if (result == ETERNALSONATA_BATTLE_OK) {
-        std::snprintf(row, sizeof(row), "%s   %.3f  %.3f  %.3f##%d_%d",
+        EternalSonataBattleFacing facing{};
+        const bool have_facing =
+            api_.get_facing &&
+            api_.get_facing(side, slot, &facing) == ETERNALSONATA_BATTLE_OK;
+        std::snprintf(row, sizeof(row), "%s   %.3f  %.3f  %.3f   %.1f deg##%d_%d",
                       UnitLabel(side, slot), position.x, position.y, position.z,
-                      side, slot);
+                      have_facing ? facing.yaw * 57.2957795f : 0.0f, side, slot);
       } else {
         std::snprintf(row, sizeof(row), "%s   no position (%d)##%d_%d",
                       UnitLabel(side, slot), result, side, slot);
@@ -152,6 +161,8 @@ class BattlePositionDialog : public rex::ui::ImGuiDialog {
         slot_ = slot;
         have_edit_ = false;
         pinned_ = false;
+        have_facing_edit_ = false;
+        pinned_facing_ = false;
       }
     }
   }
@@ -207,6 +218,61 @@ class BattlePositionDialog : public rex::ui::ImGuiDialog {
     if (pinned_ || moved) {
       set_result_ = api_.set_position(side_, slot_, &edit_);
     }
+
+    ImGui::Separator();
+    DrawFacing(io);
+  }
+
+  void DrawFacing(ImGuiIO& io) {
+    ImGui::TextUnformatted("Facing");
+    if (!api_.facing_ready()) {
+      ImGui::TextUnformatted("Facing API unavailable in this game build.");
+      return;
+    }
+    EternalSonataBattleFacing live{};
+    if (api_.get_facing(side_, slot_, &live) != ETERNALSONATA_BATTLE_OK) {
+      ImGui::TextUnformatted("No live facing for this unit.");
+      have_facing_edit_ = false;
+      pinned_facing_ = false;
+      return;
+    }
+    constexpr float kToDegrees = 57.2957795f;
+    ImGui::Text("Yaw       %.2f rad  (%.1f deg)", live.yaw, live.yaw * kToDegrees);
+    ImGui::Text("Forward   %.3f  %.3f  %.3f", live.forward.x, live.forward.y,
+                live.forward.z);
+    ImGui::Text("Rotation  %.3f  %.3f  %.3f rad", live.rotation.x, live.rotation.y,
+                live.rotation.z);
+    if (!have_facing_edit_) {
+      facing_edit_ = live.rotation;
+      have_facing_edit_ = true;
+    }
+    if (ImGui::Button("Capture live facing")) {
+      facing_edit_ = live.rotation;
+    }
+    ImGui::InputFloat("Pitch", &facing_edit_.x, 0.0f, 0.0f, "%.3f");
+    ImGui::InputFloat("Yaw", &facing_edit_.y, 0.0f, 0.0f, "%.3f");
+    ImGui::InputFloat("Roll", &facing_edit_.z, 0.0f, 0.0f, "%.3f");
+    if (ImGui::Button("Set facing")) {
+      facing_result_ = api_.set_facing(side_, slot_, &facing_edit_);
+    }
+    ImGui::SameLine();
+    ImGui::Text("Last facing result: %d", facing_result_);
+    ImGui::Checkbox("Pin facing", &pinned_facing_);
+    ImGui::SliderFloat("Turn speed", &turn_speed_, 0.05f, 6.0f,
+                       "%.2f rad per second");
+
+    const float step = turn_speed_ * std::min(io.DeltaTime, 0.05f);
+    auto hold = [](const char* label) {
+      ImGui::Button(label, ImVec2(105, 0));
+      return ImGui::IsItemActive();
+    };
+    bool turned = false;
+    if (hold("Yaw left")) { facing_edit_.y -= step; turned = true; }
+    ImGui::SameLine();
+    if (hold("Yaw right")) { facing_edit_.y += step; turned = true; }
+    if (pinned_facing_ || turned) {
+      facing_result_ = api_.set_facing(side_, slot_, &facing_edit_);
+    }
   }
 
   BattleApi api_;
@@ -218,6 +284,11 @@ class BattlePositionDialog : public rex::ui::ImGuiDialog {
   EternalSonataBattlePosition edit_{};
   float speed_ = 3.0f;
   int set_result_ = ETERNALSONATA_BATTLE_ERR_UNAVAILABLE;
+  bool have_facing_edit_ = false;
+  bool pinned_facing_ = false;
+  EternalSonataBattlePosition facing_edit_{};
+  float turn_speed_ = 1.5f;
+  int facing_result_ = ETERNALSONATA_BATTLE_ERR_UNAVAILABLE;
 };
 
 class BattlePositionProbe : public rex::system::IModPlugin {

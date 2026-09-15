@@ -1,0 +1,8 @@
+manifest_version = 2
+name = "Field Position Probe"
+version = "1.0.0"
+game_version = "1.1.4"
+author = "Marco"
+description = "Inspect and change the field leader and camera transforms with an F9 overlay."
+code = "field_position_probe"
+platform = "windows-x64"
