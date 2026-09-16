@@ -1,0 +1,7 @@
+manifest_version = 2
+name = "Low HP Alarm"
+version = "1.0.0"
+game_version = "1.2.0"
+author = "BiRabittoh"
+description = "Beeps in battle while any party member is below 20% HP."
+code = "low_hp_alarm"

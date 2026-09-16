@@ -1,7 +1,7 @@
 manifest_version = 2
 name = "Equipment API Probe"
-version = "1.1.0"
-game_version = "1.1.4"
+version = "1.0.0"
+game_version = "1.2.0"
 author = "BiRabittoh"
 description = "Overlay (F10) that exercises the whole Equipment API: reading all four slots of all ten characters, listing what each could wear, previewing a swap against the game's own recomputed stats, equipping and unequipping, the same for equipped magic including the press/hold mirror, the error paths, and the equipment events."
 code = "equipment_probe"

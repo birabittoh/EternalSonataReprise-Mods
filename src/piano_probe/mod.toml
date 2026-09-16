@@ -1,0 +1,7 @@
+manifest_version = 2
+name = "Piano Music API Probe"
+version = "1.0.0"
+game_version = "1.2.0"
+author = "BiRabittoh"
+description = "Overlay (F9) that exercises the whole Piano Music API: all seven pieces and their flags, lock/unlock in both directions, the error paths, and the unlock/lock events."
+code = "piano_probe"

@@ -1,7 +1,7 @@
 manifest_version = 2
 name = "Shutterbug"
 version = "1.0.0"
-game_version = "1.1.4"
+game_version = "1.2.0"
 author = "BiRabittoh"
 description = "Adds a custom achievement, earned by taking five photographs in a single battle. Example of the achievement API."
 code = "shutterbug"

@@ -1,0 +1,7 @@
+manifest_version = 2
+name = "Music API Probe"
+version = "1.0.0"
+game_version = "1.2.0"
+author = "BiRabittoh"
+description = "Overlay (F11) that exercises the whole Music API: all 66 OST tracks with their tab placement and titles, lock/unlock in both directions, playback, the error paths, and the unlock/lock events."
+code = "music_probe"

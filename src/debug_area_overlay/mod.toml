@@ -1,0 +1,7 @@
+manifest_version = 2
+name = "Debug Area Overlay"
+version = "1.0.0"
+game_version = "1.2.0"
+author = "BiRabittoh"
+description = "Overlay listing every field area, with a filter box, that force-loads the selected one."
+code = "debug_area_overlay"

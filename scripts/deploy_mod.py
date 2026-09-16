@@ -59,6 +59,19 @@ def main():
     shutil.copy2(src, dest)
     print(f"Copied {src} -> {dest}")
 
+    # The mod loader also needs the metadata alongside code/, not just the DLL.
+    metadata_src = REPO_ROOT / "src" / args.mod / "mod.toml"
+    if not metadata_src.is_file():
+        sys.exit(f"error: mod.toml not found at {metadata_src}")
+    metadata_dest_dir = args.game_dir / "mods" / args.mod
+    shutil.copy2(metadata_src, metadata_dest_dir / "mod.toml")
+    print(f"Copied {metadata_src} -> {metadata_dest_dir / 'mod.toml'}")
+
+    icon_src = REPO_ROOT / "src" / args.mod / "icon.png"
+    if icon_src.is_file():
+        shutil.copy2(icon_src, metadata_dest_dir / "icon.png")
+        print(f"Copied {icon_src} -> {metadata_dest_dir / 'icon.png'}")
+
 
 if __name__ == "__main__":
     main()

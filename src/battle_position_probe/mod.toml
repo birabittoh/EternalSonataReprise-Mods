@@ -1,8 +1,8 @@
 manifest_version = 2
 name = "Battle Position Probe"
 version = "1.0.0"
-game_version = "1.1.4"
-author = "Marco"
+game_version = "1.2.0"
+author = "BiRabittoh"
 description = "Inspect and move every battle party member and enemy, and turn them, with an F4 overlay."
 code = "battle_position_probe"
 platform = "windows-x64"

@@ -1,0 +1,7 @@
+manifest_version = 2
+name = "Settings API Probe"
+version = "1.0.0"
+game_version = "1.2.0"
+author = "BiRabittoh"
+description = "Overlay (F12) that exercises the whole Settings API: live reads of all 11 options, write any setting, range queries, error paths, and the setting.changed event log."
+code = "settings_probe"

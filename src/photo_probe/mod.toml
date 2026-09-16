@@ -1,7 +1,7 @@
 manifest_version = 2
 name = "Photo API Probe"
 version = "1.0.0"
-game_version = "1.1.4"
+game_version = "1.2.0"
 author = "BiRabittoh"
 description = "Overlay (F7) that exercises the whole photo album API: every metadata field, the two lookups, instant development, and the album events."
 code = "photo_probe"
