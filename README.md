@@ -23,15 +23,15 @@ python scripts/make_mods.py
 ```
 
 `make_mods.py` builds every `src/<name>/` project for the host's own
-platform by default (`--target` to pick one of `windows-x64`, `linux-x64`,
-`linux-arm64`, `mac-x64`, `mac-arm64`, or `android-arm64` explicitly, repeatable)
+platform by default (`--target` to pick one of `win-amd64`, `linux-amd64`,
+`linux-arm64`, `mac-amd64`, `mac-arm64`, or `android-arm64` explicitly, repeatable)
 and assembles the result into
 `mods/<name>/code/<platform>/`. Pass `--mod <name>` (repeatable) to build a
 subset, `--package` to also zip each mod individually.
 
-Binaries live under `code/<platform>/` (`code/windows-x64/<name>.dll`,
-`code/linux-x64/lib<name>.so`, `code/linux-arm64/lib<name>.so`,
-`code/mac-x64/lib<name>.dylib`, `code/mac-arm64/lib<name>.dylib`,
+Binaries live under `code/<platform>/` (`code/win-amd64/<name>.dll`,
+`code/linux-amd64/lib<name>.so`, `code/linux-arm64/lib<name>.so`,
+`code/mac-amd64/lib<name>.dylib`, `code/mac-arm64/lib<name>.dylib`,
 `code/android-arm64/lib<name>.so`) rather than
 flat in `code/`, so one mod folder can carry every platform's binaries
 at once without the two `.so` builds colliding on the same filename.

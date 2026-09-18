@@ -21,45 +21,39 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - windows-x64
-          - linux-x64
+          - win-amd64
+          - linux-amd64
           - linux-arm64
-          - mac-x64
+          - mac-amd64
           - mac-arm64
           - android-arm64
         include:
-          - platform: windows-x64
+          - platform: win-amd64
             runner: windows-latest
-            sdk_subdir: win-amd64
 
-          - platform: linux-x64
+          - platform: linux-amd64
             runner: ubuntu-latest
-            sdk_subdir: linux-amd64
 
           - platform: linux-arm64
             runner: ubuntu-24.04-arm
-            sdk_subdir: linux-arm64
 
-          - platform: mac-x64
+          - platform: mac-amd64
             runner: macos-15-intel
-            sdk_subdir: mac-amd64
 
           - platform: mac-arm64
             runner: macos-15
-            sdk_subdir: mac-arm64
 
           # Cross-built with the NDK the runner already ships at
           # $ANDROID_NDK_HOME, so no clang install step here.
           - platform: android-arm64
             runner: ubuntu-latest
-            sdk_subdir: android-arm64
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install dependencies (Linux)
-        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64'
+        if: startsWith(matrix.platform, 'linux-')
         run: |
           wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 20
           sudo apt-get install -y ninja-build
@@ -71,7 +65,7 @@ jobs:
         run: sudo apt-get install -y ninja-build
 
       - name: Install LLVM, CMake, Ninja (Windows)
-        if: matrix.platform == 'windows-x64'
+        if: matrix.platform == 'win-amd64'
         run: choco install llvm cmake ninja -y
 
       - name: Set up sccache
@@ -84,7 +78,7 @@ jobs:
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python scripts/download-sdk.py "sdk/${{ matrix.sdk_subdir }}" --pinned --platform ${{ matrix.sdk_subdir }}
+        run: python scripts/download-sdk.py "sdk/${{ matrix.platform }}" --pinned --platform ${{ matrix.platform }}
 
       - name: Build mods
         shell: bash
@@ -127,10 +121,10 @@ jobs:
         shell: bash
         run: |
           python scripts/merge_and_package.py \
-            --input raw/raw-mods-windows-x64 \
-            --input raw/raw-mods-linux-x64 \
+            --input raw/raw-mods-win-amd64 \
+            --input raw/raw-mods-linux-amd64 \
             --input raw/raw-mods-linux-arm64 \
-            --input raw/raw-mods-mac-x64 \
+            --input raw/raw-mods-mac-amd64 \
             --input raw/raw-mods-mac-arm64 \
             --input raw/raw-mods-android-arm64 \
             --output pkg \

@@ -24,23 +24,21 @@ The code/<platform>/ nesting (rather than a flat code/ like the mod
 loader expects -- see rex::system::LoadModPlugin) is deliberate: it lets
 one mod folder, and therefore one release zip (see
 scripts/merge_and_package.py), carry all three platforms' binaries side by
-side without linux-x64 and linux-arm64 colliding on the same lib<name>.so
+side without linux-amd64 and linux-arm64 colliding on the same lib<name>.so
 filename. Installing a mod into an actual game copy means flattening the
 one platform subdirectory you need into code/ directly (see README.md).
 
-This repo tracks six platforms: windows-x64, linux-x64, linux-arm64,
-mac-x64, mac-arm64 and android-arm64. By
+This repo tracks six platforms: win-amd64, linux-amd64, linux-arm64,
+mac-amd64, mac-arm64 and android-arm64 (the SDK's own release names). By
 default every mod is built for whichever platform(s) you pass via --target
 (default: just the host's own platform, matching how CI's runner
 matrix builds one platform per job, then merges them into per-mod
 release zips -- see .github/workflows/_build.yml).
 
-Each target's SDK lives in its own subdirectory (<sdk-root>/win-amd64,
-<sdk-root>/linux-amd64, <sdk-root>/linux-arm64, <sdk-root>/mac-amd64, or
-<sdk-root>/mac-arm64, <sdk-root>/android-arm64), fetched via
+Each target's SDK lives in its own <sdk-root>/<platform> subdirectory, fetched via
 scripts/download-sdk.py --pinned --platform ...
 
-Building a target that doesn't match the host: windows-x64 and linux-x64 can
+Building a target that doesn't match the host: win-amd64 and linux-amd64 can
 be cross-built via Docker (see scripts/docker/). android-arm64 is cross-only
 and needs just an NDK (--ndk / $ANDROID_NDK_HOME); a glibc linux-arm64 binary
 cannot stand in for it, since bionic has no libc.so.6. linux-arm64 has no
@@ -62,13 +60,16 @@ import subprocess
 import sys
 
 
+# Keyed by platform id, which is also the SDK release subdirectory and the
+# id the game's ModState::HostPlatformId() reports, so it names the
+# code/<platform>/ directory and the mod.toml `platform` entry directly.
 PLATFORM_INFO = {
-    "windows-x64": {"ext": ".dll", "prefix": "", "sdk_subdir": "win-amd64", "manifest_key": "windows-x64"},
-    "linux-x64": {"ext": ".so", "prefix": "lib", "sdk_subdir": "linux-amd64", "manifest_key": "linux-x64"},
-    "linux-arm64": {"ext": ".so", "prefix": "lib", "sdk_subdir": "linux-arm64", "manifest_key": "linux-arm64"},
-    "mac-x64": {"ext": ".dylib", "prefix": "lib", "sdk_subdir": "mac-amd64", "manifest_key": "mac-x64"},
-    "mac-arm64": {"ext": ".dylib", "prefix": "lib", "sdk_subdir": "mac-arm64", "manifest_key": "mac-arm64"},
-    "android-arm64": {"ext": ".so", "prefix": "lib", "sdk_subdir": "android-arm64", "manifest_key": "android-arm64"},
+    "win-amd64": {"ext": ".dll", "prefix": ""},
+    "linux-amd64": {"ext": ".so", "prefix": "lib"},
+    "linux-arm64": {"ext": ".so", "prefix": "lib"},
+    "mac-amd64": {"ext": ".dylib", "prefix": "lib"},
+    "mac-arm64": {"ext": ".dylib", "prefix": "lib"},
+    "android-arm64": {"ext": ".so", "prefix": "lib"},
 }
 
 # Matches minSdk in the game's android/app/build.gradle.kts.
@@ -93,15 +94,15 @@ def host_plat():
     system = platform.system()
     arch = platform.machine().lower()
     if system == "Windows":
-        return "windows-x64"
+        return "win-amd64"
     if system == "Linux":
         if arch in ("x86_64", "amd64"):
-            return "linux-x64"
+            return "linux-amd64"
         if arch in ("aarch64", "arm64"):
             return "linux-arm64"
     if system == "Darwin":
         if arch in ("x86_64", "amd64"):
-            return "mac-x64"
+            return "mac-amd64"
         if arch in ("aarch64", "arm64"):
             return "mac-arm64"
     return None
@@ -109,7 +110,7 @@ def host_plat():
 
 def can_cross_build_windows_locally():
     return (
-        host_plat() != "windows-x64"
+        host_plat() != "win-amd64"
         and shutil.which("clang-cl") is not None
         and os.path.isdir(XWIN_CACHE_DIR)
     )
@@ -152,19 +153,19 @@ def built_platforms_for_mod(root, name, postfix):
     code_dir = os.path.join(root, "mods", name, "code")
     built = []
     for plat, info in PLATFORM_INFO.items():
-        binary = os.path.join(code_dir, info["manifest_key"],
+        binary = os.path.join(code_dir, plat,
                               f"{info['prefix']}{name}{postfix}{info['ext']}")
         if os.path.isfile(binary):
-            built.append(info["manifest_key"])
+            built.append(plat)
     return built
 
 
-def update_mod_platform_field(src_dir, name, manifest_keys):
+def update_mod_platform_field(src_dir, name, platforms):
     manifest_path = os.path.join(src_dir, name, "mod.toml")
     if not os.path.isfile(manifest_path):
         return
 
-    value = ",".join(manifest_keys)
+    value = ",".join(platforms)
     with open(manifest_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
 
@@ -201,7 +202,7 @@ def require_sdk(sdk_dir, plat):
     if not is_valid_sdk(sdk_dir):
         print(f"error: {plat} SDK not found at '{sdk_dir}' — run "
               f"'python scripts/download-sdk.py {sdk_dir} --pinned --platform "
-              f"{PLATFORM_INFO[plat]['sdk_subdir']}' first", file=sys.stderr)
+              f"{plat}' first", file=sys.stderr)
         sys.exit(1)
 
 
@@ -246,7 +247,7 @@ def build_mod_windows_cross(mod_src_dir, name, sdk_dir, root, config):
     run(configure_args)
     run(["cmake", "--build", build_dir, "--parallel", str(os.cpu_count() or 1)])
 
-    binary = find_built_binary(build_dir, name, "windows-x64", config)
+    binary = find_built_binary(build_dir, name, "win-amd64", config)
     if not binary:
         print(f"error: couldn't find built binary for mod '{name}' under {build_dir}",
               file=sys.stderr)
@@ -295,7 +296,7 @@ def build_mod_android(mod_src_dir, name, sdk_dir, root, config, ndk):
 
 def assemble_mod(mod_src_dir, name, binary_path, plat, root, postfix):
     # Binaries land under code/<platform>/ rather than flat code/, since
-    # linux-x64 and linux-arm64 both produce lib<name>.so and would
+    # linux-amd64 and linux-arm64 both produce lib<name>.so and would
     # otherwise collide -- this also lets a single mod folder (and
     # therefore a single release zip, see merge_and_package.py) carry all
     # three platforms' binaries at once. Installing into an actual game
@@ -311,7 +312,7 @@ def assemble_mod(mod_src_dir, name, binary_path, plat, root, postfix):
     # mod needs at runtime.
     shutil.copytree(mod_src_dir, dest_dir, dirs_exist_ok=True)
 
-    code_dir = os.path.join(dest_dir, "code", info["manifest_key"])
+    code_dir = os.path.join(dest_dir, "code", plat)
     os.makedirs(code_dir, exist_ok=True)
 
     dest_binary = os.path.join(code_dir, f"{info['prefix']}{name}{postfix}{info['ext']}")
@@ -325,10 +326,10 @@ def build_targets_via_docker(plat, names, root, sdk_dir, config):
               f"PATH to cross-build it instead", file=sys.stderr)
         sys.exit(1)
 
-    if plat == "linux-x64":
+    if plat == "linux-amd64":
         dockerfile = os.path.join(root, "scripts", "docker", "linux-mod-build.Dockerfile")
         image = LINUX_DOCKER_IMAGE
-    elif plat == "windows-x64":
+    elif plat == "win-amd64":
         dockerfile = os.path.join(root, "scripts", "docker", "windows-mod-build.Dockerfile")
         image = WINDOWS_CROSS_DOCKER_IMAGE
     else:
@@ -341,9 +342,8 @@ def build_targets_via_docker(plat, names, root, sdk_dir, config):
     mod_args = []
     for name in names:
         mod_args += ["--mod", name]
-    sdk_subdir = PLATFORM_INFO[plat]["sdk_subdir"]
     inner_cmd = (
-        f"python3 scripts/download-sdk.py {sdk_dir} --pinned --platform {sdk_subdir} && "
+        f"python3 scripts/download-sdk.py {sdk_dir} --pinned --platform {plat} && "
         f"python3 scripts/make_mods.py --target {plat} --sdk-dir {sdk_dir} --config {config} "
         + " ".join(mod_args)
     )
@@ -389,7 +389,7 @@ def main():
                         help="Only build this mod (repeatable); default: all of src/*")
     parser.add_argument("--target", action="append", dest="targets",
                         choices=list(PLATFORM_INFO.keys()),
-                        metavar="{windows-x64,linux-x64,linux-arm64,mac-x64,mac-arm64,android-arm64}",
+                        metavar="{win-amd64,linux-amd64,linux-arm64,mac-amd64,mac-arm64,android-arm64}",
                         help="Only build for this platform (repeatable); default: host's own platform")
     parser.add_argument("--ndk", metavar="DIR",
                         help="Android NDK root for --target android-arm64 "
@@ -445,7 +445,7 @@ def main():
             print(f"\n=== Platform: {plat} ===")
 
             sdk_root = args.sdk_dir.replace("\\", "/").rstrip("/")
-            sdk_dir = f"{sdk_root}/{PLATFORM_INFO[plat]['sdk_subdir']}"
+            sdk_dir = f"{sdk_root}/{plat}"
 
             if plat == host:
                 sdk_dir = resolve_native_sdk_dir(sdk_root, sdk_dir, plat)
@@ -466,11 +466,11 @@ def main():
                     binary = build_mod_android(mod_src_dir, name, sdk_dir, root, args.config, ndk)
                     assemble_mod(mod_src_dir, name, binary, plat, root, postfix)
 
-            elif plat == "windows-x64" and can_cross_build_windows_locally():
+            elif plat == "win-amd64" and can_cross_build_windows_locally():
                 require_sdk(sdk_dir, plat)
                 for name in code_names:
                     mod_src_dir = os.path.join(src_dir, name)
-                    print(f"\n--- Cross-building mod '{name}' for windows-x64 (clang-cl + xwin) ---")
+                    print(f"\n--- Cross-building mod '{name}' for win-amd64 (clang-cl + xwin) ---")
                     binary = build_mod_windows_cross(mod_src_dir, name, sdk_dir, root, args.config)
                     assemble_mod(mod_src_dir, name, binary, plat, root, postfix)
 

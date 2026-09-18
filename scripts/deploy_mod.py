@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds a mod via make_mods.py and copies its windows-x64 DLL into a game
+"""Builds a mod via make_mods.py and copies its win-amd64 DLL into a game
 repo's mods/ directory, so it's picked up by that game's mod loader.
 
 Usage:
@@ -49,11 +49,11 @@ def main():
         )
 
     dll_name = f"{args.mod}{postfix}.dll"
-    src = REPO_ROOT / "mods" / args.mod / "code" / "windows-x64" / dll_name
+    src = REPO_ROOT / "mods" / args.mod / "code" / "win-amd64" / dll_name
     if not src.is_file():
         sys.exit(f"error: built DLL not found at {src}")
 
-    dest_dir = args.game_dir / "mods" / args.mod / "code" / "windows-x64"
+    dest_dir = args.game_dir / "mods" / args.mod / "code" / "win-amd64"
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest = dest_dir / dll_name
     shutil.copy2(src, dest)

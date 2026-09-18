@@ -58,8 +58,8 @@ def merge_mod(mod_name, input_dirs, merge_root):
     # don't carry a `platform` key -- leave those alone.
     code_dir = os.path.join(dest, "code")
     if os.path.isdir(code_dir):
-        built = [info["manifest_key"] for info in PLATFORM_INFO.values()
-                 if os.path.isdir(os.path.join(code_dir, info["manifest_key"]))]
+        built = [plat for plat in PLATFORM_INFO
+                 if os.path.isdir(os.path.join(code_dir, plat))]
         update_mod_platform_field(merge_root, mod_name, built)
     return dest
 
