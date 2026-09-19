@@ -1,0 +1,7 @@
+manifest_version = 2
+name = "Cutscene Probe"
+version = "1.0.0"
+game_version = "1.2.1"
+author = "BiRabittoh"
+description = "Inspect the running cutscene, skip it, auto-skip every skippable one, or take over its camera, with an F8 overlay."
+code = "cutscene_probe"
