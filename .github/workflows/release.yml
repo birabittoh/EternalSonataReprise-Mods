@@ -31,6 +31,12 @@ jobs:
           path: release-assets
           merge-multiple: true
 
+      # The static catalog the game falls back to when Firestore is rate
+      # limited or down; which mods it lists is cherry-picked in catalog.toml.
+      - name: Generate catalog.json
+        run: |
+          python scripts/gen_catalog.py             --assets release-assets             --repo "${{ github.repository }}"             --tag "${{ github.ref_name }}"             --output release-assets/catalog.json
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

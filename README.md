@@ -37,3 +37,13 @@ flat in `code/`, so one mod folder can carry every platform's binaries
 at once without the two `.so` builds colliding on the same filename.
 The mod loader checks `code/<platform>/<stem>...` (matching the running
 host) before falling back to a flat `code/<stem>...`.
+
+## Publishing to the in-game catalog
+
+Tagging `v*` builds every mod, attaches one zip per mod to the GitHub
+Release and generates `catalog.json` next to them
+(`scripts/gen_catalog.py`). The game's mod manager fetches
+`releases/latest/download/catalog.json` whenever its primary catalog backend
+is unavailable. Only the ids listed in `catalog.toml` are included, so add a
+mod there to publish it; `featured` ids sort to the top. An `icon.png` in the
+mod's source folder becomes its catalog icon.
