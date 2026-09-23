@@ -44,6 +44,8 @@ struct OverworldApi {
   EternalSonataForceLoadAreaFn force_load_area = nullptr;
   EternalSonataGetAreaCountFn area_count = nullptr;
   EternalSonataGetAreaInfoFn area_info = nullptr;
+  // Optional: only the origin button needs it.
+  EternalSonataSetFieldPositionFn set_field_position = nullptr;
 
   bool ok() const {
     return abi_version && is_loading_available && force_load_area && area_count && area_info;
@@ -70,6 +72,7 @@ OverworldApi LoadOverworldApi() {
   Resolve(api.force_load_area, "EternalSonataForceLoadArea");
   Resolve(api.area_count, "EternalSonataGetAreaCount");
   Resolve(api.area_info, "EternalSonataGetAreaInfo");
+  Resolve(api.set_field_position, "EternalSonataSetFieldPosition");
   return api;
 }
 
@@ -143,6 +146,13 @@ class DebugAreaOverlayDialog : public rex::ui::ImGuiDialog {
     }
 
     ImGui::Checkbox("Show all maps", &show_all_maps_);
+    if (api_.set_field_position) {
+      ImGui::SameLine();
+      if (ImGui::Button("Move to origin")) {
+        const EternalSonataFieldPosition origin{0.0f, 0.0f, 0.0f};
+        api_.set_field_position(&origin);
+      }
+    }
 
     ImGui::BeginChild("##arealist", ImVec2(0, 0), ImGuiChildFlags_Borders);
     EnsureAreas();
