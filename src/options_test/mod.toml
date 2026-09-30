@@ -1,0 +1,7 @@
+manifest_version = 2
+name = "Options Test"
+version = "1.0.0"
+game_version = "1.2.0"
+author = "BiRabittoh"
+description = "Adds twelve test rows to the native Options screen, filling the first mods page and spilling onto the next, and logs every change."
+code = "options_test"
