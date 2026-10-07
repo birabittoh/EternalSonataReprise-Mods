@@ -359,7 +359,13 @@ def build_targets_via_docker(plat, names, root, sdk_dir, config):
 def copy_asset_mod(mod_src_dir, name, root):
     dest_dir = os.path.join(root, "mods", name)
     print(f"+ cp -r {mod_src_dir} {dest_dir}")
-    shutil.copytree(mod_src_dir, dest_dir, dirs_exist_ok=True)
+    shutil.copytree(mod_src_dir, dest_dir, dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns("generate.py", "__pycache__"))
+    # Assets derived from game data are not committed; the mod's generate.py
+    # writes them into the assembled folder.
+    generator = os.path.join(mod_src_dir, "generate.py")
+    if os.path.isfile(generator):
+        run([sys.executable, generator, "--out", dest_dir])
 
 
 def package_mod(name, root):
