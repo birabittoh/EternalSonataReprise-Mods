@@ -65,11 +65,6 @@ struct PartyApi {
   EternalSonataRemoveCharacterFromPartyFn remove = nullptr;
   EternalSonataSetCharacterPositionFn set_position = nullptr;
   EternalSonataSetPartyLevelFn set_level = nullptr;
-  // The added slots are vacant unless some other mod has defined them, and a
-  // vacant slot has no name and cannot join a party, so it is left out of every
-  // list here rather than shown as a row that does nothing.
-  EternalSonataIsCharacterDefinedFn is_defined = nullptr;
-
   bool ok() const { return abi_version && is_available && name && members && add && remove; }
 };
 
@@ -129,7 +124,6 @@ PartyApi LoadPartyApi() {
   Resolve(api.remove, "EternalSonataRemoveCharacterFromParty");
   Resolve(api.set_position, "EternalSonataSetCharacterPosition");
   Resolve(api.set_level, "EternalSonataSetPartyLevel");
-  Resolve(api.is_defined, "EternalSonataIsCharacterDefined");
   return api;
 }
 
@@ -537,14 +531,10 @@ class PartyOverlayDialog : public rex::ui::ImGuiDialog {
     }
     std::vector<int> missing;
     for (int character = 1; character <= ETERNALSONATA_CHARACTER_COUNT; ++character) {
-      if (api_.is_defined && !api_.is_defined(character)) {
-        continue;  // a vacant added slot: no mod has given it any content
-      }
-      // On a host old enough not to export is_defined at all, an added slot
-      // is still reported as present but has no name; fall back to that so
-      // it doesn't show up as a button that adds nothing and does nothing.
+      // A vacant slot (11 and 12 on 360 data, until a mod names them) has
+      // no name; leave it out rather than show a button that adds nobody.
       const char* name = api_.name(character);
-      if (!api_.is_defined && (!name || name[0] == '\0')) {
+      if (!name || name[0] == '\0') {
         continue;
       }
       if (!api_.in_party(character)) {

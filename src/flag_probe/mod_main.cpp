@@ -443,10 +443,6 @@ class FlagProbeDialog : public rex::ui::ImGuiDialog {
       if (ImGui::Button("SetScenarioCounter(-1)")) {
         last_error_ = ErrorResult("SetScenarioCounter(-1)", api_.set_scenario(-1));
       }
-      ImGui::SameLine();
-      if (ImGui::Button("SetScenarioCounter(65536)")) {
-        last_error_ = ErrorResult("SetScenarioCounter(65536)", api_.set_scenario(65536));
-      }
     }
 
     if (!last_error_.empty()) {
