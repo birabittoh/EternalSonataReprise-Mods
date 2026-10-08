@@ -17,6 +17,7 @@
 #include <rex/ui/imgui_drawer.h>
 #include <rex/ui/keybinds.h>
 
+#include <rexmod/character_names.h>
 #include <rexmod/eternalsonata_costume_api.h>
 
 #if defined(_WIN32)
@@ -29,11 +30,6 @@ namespace {
 
 constexpr char kBindName[] = "bind_costumes";
 constexpr char kWindowTitle[] = "Costumes##costume_overlay";
-
-constexpr const char* kCharacters[ETERNALSONATA_COSTUME_CHARACTER_COUNT] = {
-    "Allegretto", "Polka", "Beat",     "Frederic", "Viola",     "Salsa",
-    "Jazz",       "Falsetto", "Claves", "March",  "Crescendo", "Serenade",
-};
 
 void* HostSymbol(const char* symbol) {
 #if defined(_WIN32)
@@ -133,7 +129,7 @@ class CostumeOverlayDialog : public rex::ui::ImGuiDialog {
     const int count = api_.count(c);
     ImGui::PushID(c);
     ImGui::AlignTextToFramePadding();
-    ImGui::TextUnformatted(kCharacters[c - 1]);
+    ImGui::TextUnformatted(rexmod::CharacterName(c));
     ImGui::SameLine(110.0f);
     ImGui::SetNextItemWidth(-1.0f);
     const int worn = api_.worn(c);

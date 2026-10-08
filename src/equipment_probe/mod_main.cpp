@@ -101,6 +101,7 @@
 #include <rex/ui/imgui_drawer.h>
 #include <rex/ui/keybinds.h>
 
+#include <rexmod/character_names.h>
 #include <rexmod/eternalsonata_equipment_api.h>
 
 #if defined(_WIN32)
@@ -118,12 +119,6 @@ constexpr int kCharacterMin = ETERNALSONATA_EQUIPMENT_CHARACTER_MIN;
 constexpr int kCharacterMax = ETERNALSONATA_EQUIPMENT_CHARACTER_MAX;
 constexpr int kSlotCount = ETERNALSONATA_EQUIPMENT_SLOT_COUNT;
 constexpr int kSlotTotal = kCharacterMax * kSlotCount;
-
-// The cast in character-number order, so a row says who it is without the
-// probe having to resolve the Party API too.
-constexpr const char* kCharacterNames[kCharacterMax + 1] = {
-    "",      "Allegretto", "Polka", "Beat",     "Frederic", "Viola",
-    "Salsa", "Jazz",       "Falsetto", "Claves", "March"};
 
 constexpr const char* kSlotNames[kSlotCount] = {"weapon", "armor", "accessory 1",
                                                 "accessory 2"};
@@ -464,7 +459,7 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
         ImGui::TableNextColumn();
         ImGui::Text("%d %s", row.character,
                     (row.character >= kCharacterMin && row.character <= kCharacterMax)
-                        ? kCharacterNames[row.character]
+                        ? rexmod::CharacterName(row.character)
                         : "?");
         ImGui::TableNextColumn();
         ImGui::TextUnformatted((row.slot >= 0 && row.slot < kSlotCount) ? kSlotNames[row.slot]
@@ -728,7 +723,7 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
         ImGui::TableNextColumn();
         ImGui::Text("%d %s", row.character,
                     (row.character >= kCharacterMin && row.character <= kCharacterMax)
-                        ? kCharacterNames[row.character]
+                        ? rexmod::CharacterName(row.character)
                         : "?");
         ImGui::TableNextColumn();
         ImGui::TextUnformatted((row.slot >= 0 && row.slot < kMagicSlotCount)
@@ -1187,7 +1182,7 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
       if (broken) {
         ++mirror_broken_;
         if (mirror_detail_.empty()) {
-          mirror_detail_ = kCharacterNames[character];
+          mirror_detail_ = rexmod::CharacterName(character);
         }
       }
     }
@@ -1304,7 +1299,7 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
         if (preview_detail_.empty()) {
           char buffer[192];
           std::snprintf(buffer, sizeof(buffer), "%s differs for %s (preview %d, live %d)", which,
-                        kCharacterNames[character],
+                        rexmod::CharacterName(character),
                         StatByName(predicted, which), StatByName(live, which));
           preview_detail_ = buffer;
         }
@@ -1389,7 +1384,7 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
           ++observed_magic_;
           char line[160];
           std::snprintf(line, sizeof(line), "observed  magic set  %s %s: magic %d",
-                        kCharacterNames[character], kMagicSlotNames[slot],
+                        rexmod::CharacterName(character), kMagicSlotNames[slot],
                         now_magic[index]);
           PushEvent(line);
         }
@@ -1411,14 +1406,14 @@ class EquipmentProbeDialog : public rex::ui::ImGuiDialog {
           ++observed_unequipped_;
           char line[160];
           std::snprintf(line, sizeof(line), "observed  unequipped %s %s: item %d",
-                        kCharacterNames[character], kSlotNames[slot], before);
+                        rexmod::CharacterName(character), kSlotNames[slot], before);
           PushEvent(line);
         }
         if (after != 0) {
           ++observed_equipped_;
           char line[160];
           std::snprintf(line, sizeof(line), "observed  equipped   %s %s: item %d",
-                        kCharacterNames[character], kSlotNames[slot], after);
+                        rexmod::CharacterName(character), kSlotNames[slot], after);
           PushEvent(line);
         }
       }
