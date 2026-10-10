@@ -40,6 +40,20 @@ def main():
     args = parser.parse_args()
     postfix = CONFIG_POSTFIXES[args.config]
 
+    # No CMakeLists.txt: an asset-only mod, which is copied whole.
+    if not (REPO_ROOT / "src" / args.mod / "CMakeLists.txt").is_file():
+        if not args.skip_build:
+            subprocess.run(
+                [sys.executable, str(REPO_ROOT / "scripts" / "make_mods.py"), "--mod", args.mod],
+                cwd=REPO_ROOT,
+                check=True,
+            )
+        src = REPO_ROOT / "mods" / args.mod
+        dest = args.game_dir / "mods" / args.mod
+        shutil.copytree(src, dest, dirs_exist_ok=True)
+        print(f"Copied {src} -> {dest}")
+        return
+
     if not args.skip_build:
         subprocess.run(
             [sys.executable, str(REPO_ROOT / "scripts" / "make_mods.py"),
