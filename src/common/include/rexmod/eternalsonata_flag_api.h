@@ -39,10 +39,7 @@
 extern "C" {
 #endif
 
-// Bumped whenever anything below changes meaning. Additive changes bump the
-// version; existing entry points keep their signature.
-// Version 2: the bank is the full 2048 bytes and the scenario counter is the
-// u32 after it; version 1 read the counter from the bank's last two bytes.
+// Bumped whenever anything below changes meaning.
 #define ETERNALSONATA_FLAGS_ABI_VERSION 2u
 
 // Flags in the bank. Flag `n` is bit `n & 7` of byte `n >> 3`, counting from
@@ -78,8 +75,17 @@ enum {
 #define ETERNALSONATA_FLAG_EVENT_SCENARIO_CHANGED \
   "eternalsonata.flags.scenario.changed"
 
+// Published when the Scrapbook's unlocked state changes. Payload f64 is its
+// new value (0 or 1).
+#define ETERNALSONATA_FLAG_EVENT_SCRAPBOOK_CHANGED \
+  "eternalsonata.flags.scrapbook.changed"
+
+// The same for the costumes blocked state.
+#define ETERNALSONATA_FLAG_EVENT_COSTUMES_BLOCKED_CHANGED \
+  "eternalsonata.flags.costumesblocked.changed"
+
 // A loaded save replaces the whole bank. That is adopted silently rather than
-// reported, so none of the three events fire for it.
+// reported, so none of the events fire for it.
 
 // Host ABI version, so a mod can tell what it is talking to.
 typedef uint32_t (*EternalSonataFlagsAbiVersionFn)(void);
@@ -116,6 +122,20 @@ typedef int (*EternalSonataResetFlagsFn)(void);
 // error.
 typedef int (*EternalSonataGetScenarioCounterFn)(void);
 typedef int (*EternalSonataSetScenarioCounterFn)(int value);
+
+// Version 3. Whether the camp menu shows the Scrapbook, PS3 data only: the
+// camp menu flag Bel01.e sets through native 5029, kept outside the bank and
+// saved with the game. The strip reads it when the camp menu opens. Get
+// answers 0 or 1, set takes 0 or 1; both answer
+// ETERNALSONATA_FLAG_ERR_UNAVAILABLE on 360 data.
+typedef int (*EternalSonataGetScrapbookUnlockedFn)(void);
+typedef int (*EternalSonataSetScrapbookUnlockedFn)(int value);
+
+// Version 3. Whether the story has costume changes off, PS3 data only: the
+// camp menu flag scripts set through native 5032, kept and answered like the
+// Scrapbook's above. Nothing in the host acts on it yet.
+typedef int (*EternalSonataGetCostumesBlockedFn)(void);
+typedef int (*EternalSonataSetCostumesBlockedFn)(int value);
 
 #ifdef __cplusplus
 }  // extern "C"
