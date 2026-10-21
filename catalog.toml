@@ -6,6 +6,9 @@
 published = [
     "area_overlay",
     "bus_inspector",
+    "costume_overlay",
+    "costume_tints",
+    "flags_overlay",
     "low_hp_alarm",
     "party_overlay",
     "save_anywhere",
