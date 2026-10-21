@@ -1,4 +1,4 @@
-// party_overlay - an overlay (F5) over the game's party: who is in it, in what
+// party_overlay - an overlay (F6) over the game's party: who is in it, in what
 // order, with what stats, plus adding, removing, reordering and healing.
 //
 // The same keybind also opens a second window over the battle in progress: the
@@ -160,7 +160,7 @@ class PartyOverlayDialog : public rex::ui::ImGuiDialog {
   explicit PartyOverlayDialog(rex::ui::ImGuiDrawer* drawer)
       : ImGuiDialog(drawer), api_(LoadPartyApi()), battle_(LoadBattleApi()) {
     rex::ui::RegisterBind(
-        "bind_party_overlay", "F5", "Toggle party and battle overlays",
+        "bind_party_overlay", "F6", "Toggle party and battle overlays",
         [this] { visible_ = !visible_; }, [this] { return visible_; }, "Party Overlay");
   }
 
@@ -193,17 +193,6 @@ class PartyOverlayDialog : public rex::ui::ImGuiDialog {
     const bool battle_active = battle_.ok() && battle_.state(&state) == ETERNALSONATA_BATTLE_OK &&
                                state.active;
 
-    if (battle_active) {
-      // Fixed width, auto height. Everything in here changes from frame to
-      // frame (names arriving, "acting" appearing, HP digits gaining a
-      // column), and a plain auto-resize would have the window twitch wider
-      // and narrower the whole battle. Constraining both bounds to the same
-      // width pins it while still letting the height follow the unit count.
-      ImGui::SetNextWindowSizeConstraints(ImVec2(kBattleWindowWidth, 0.0f),
-                                          ImVec2(kBattleWindowWidth, FLT_MAX));
-    } else {
-      ImGui::SetNextWindowSize(ImVec2(360, 0), ImGuiCond_FirstUseEver);
-    }
     if (!ImGui::Begin("Party Overlay", &visible_, ImGuiWindowFlags_AlwaysAutoResize)) {
       ImGui::End();
       return;
@@ -438,7 +427,8 @@ class PartyOverlayDialog : public rex::ui::ImGuiDialog {
     // Red as health runs out, so a nearly dead unit reads at a glance.
     const ImVec4 bar(1.0f - 0.6f * fraction, 0.25f + 0.45f * fraction, 0.3f * fraction, 1.0f);
     ImGui::PushStyleColor(ImGuiCol_PlotHistogram, bar);
-    ImGui::ProgressBar(fraction, ImVec2(-1.0f, ImGui::GetTextLineHeight()), overlay);
+    // A fixed width: one that fills the window would stop it auto sizing.
+    ImGui::ProgressBar(fraction, ImVec2(kHpBarWidth, ImGui::GetTextLineHeight()), overlay);
     ImGui::PopStyleColor();
   }
 
@@ -570,7 +560,6 @@ class PartyOverlayDialog : public rex::ui::ImGuiDialog {
         std::string(api_.name(character)) + " Stats##detail" + std::to_string(character);
 
     bool open = detail_open_[character];
-    ImGui::SetNextWindowSize(ImVec2(240, 0), ImGuiCond_FirstUseEver);
     if (ImGui::Begin(title.c_str(), &open, ImGuiWindowFlags_AlwaysAutoResize)) {
       EternalSonataCharacterStats stats{};
       // Read the character's own stats, not the equipment-adjusted ones: those
@@ -581,18 +570,32 @@ class PartyOverlayDialog : public rex::ui::ImGuiDialog {
         ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "stats unavailable");
       } else if (!edit_mode_[character]) {
         const float label_column =
-            ImGui::CalcTextSize("Level").x + 2.0f * ImGui::GetStyle().ItemSpacing.x;
+            ImGui::CalcTextSize("Max HP").x + 2.0f * ImGui::GetStyle().ItemSpacing.x;
         auto row = [&](const char* label, const std::string& value) {
           ImGui::Text("%s", label);
           ImGui::SameLine(label_column);
           ImGui::Text("%s", value.c_str());
         };
+        // Equipment is the live total minus the base, which also covers the
+        // multipliers some accessories apply.
+        EternalSonataCharacterStats live{};
+        const bool have_live =
+            api_.stats && api_.stats(character, &live) == ETERNALSONATA_PARTY_OK;
+        auto sum = [&](int32_t base, int32_t total) {
+          if (!have_live)
+            return std::to_string(base);
+          const int32_t equip = total - base;
+          return std::to_string(base) + (equip < 0 ? " - " : " + ") +
+                 std::to_string(equip < 0 ? -equip : equip) + " = " + std::to_string(total);
+        };
         row("Level", std::to_string(stats.level));
-        row("HP", std::to_string(stats.hp) + " / " + std::to_string(stats.hp_max));
-        row("ATK", std::to_string(stats.attack));
-        row("MGC", std::to_string(stats.magic));
-        row("DEF", std::to_string(stats.defense));
-        row("SPD", std::to_string(stats.speed));
+        row("HP", std::to_string(have_live ? live.hp : stats.hp) + " / " +
+                      std::to_string(have_live ? live.hp_max : stats.hp_max));
+        row("Max HP", sum(stats.hp_max, live.hp_max));
+        row("ATK", sum(stats.attack, live.attack));
+        row("MGC", sum(stats.magic, live.magic));
+        row("DEF", sum(stats.defense, live.defense));
+        row("SPD", sum(stats.speed, live.speed));
         if (api_.set_stats && ImGui::Button("Edit")) {
           edit_[character].stats = stats;
           edit_mode_[character] = true;
@@ -614,7 +617,7 @@ class PartyOverlayDialog : public rex::ui::ImGuiDialog {
         };
         field("Level", &b.level);
         field("HP", &b.hp);
-        field("HP max", &b.hp_max);
+        field("Max HP", &b.hp_max);
         field("ATK", &b.attack);
         field("MGC", &b.magic);
         field("DEF", &b.defense);
@@ -637,7 +640,7 @@ class PartyOverlayDialog : public rex::ui::ImGuiDialog {
     }
   }
 
-  static constexpr float kBattleWindowWidth = 340.0f;
+  static constexpr float kHpBarWidth = 320.0f;
 
   PartyApi api_;
   BattleApi battle_;
