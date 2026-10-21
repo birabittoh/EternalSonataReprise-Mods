@@ -1,0 +1,1850 @@
+# Costume tints for every playable character, made by the host from their own
+# costumes; no files. Textures are indices as `scripts/models.py list -v` orders
+# them, which the Xbox 360 and PS3 models share.
+
+# Allegretto
+
+[[costume]]
+character = "allegretto"
+name = "red"
+label = "Red"
+
+[[costume.tint]]
+from = "#7F9997"
+to = "#996B6B"
+textures = [7]
+hue_range = 25
+min_saturation = 0.08
+
+[[costume.portrait_tint]]
+from = "#85A6A6"
+to = "#A67474"
+hue_range = 14
+min_saturation = 0.06
+max_saturation = 0.3
+
+[[costume]]
+character = "allegretto"
+name = "gold"
+label = "Gold"
+
+[[costume.tint]]
+from = "#7F9997"
+to = "#998964"
+textures = [7]
+hue_range = 25
+min_saturation = 0.08
+
+[[costume.portrait_tint]]
+from = "#85A6A6"
+to = "#A6956D"
+hue_range = 14
+min_saturation = 0.06
+max_saturation = 0.3
+
+[[costume]]
+character = "allegretto"
+name = "green"
+label = "Green"
+
+[[costume.tint]]
+from = "#7F9997"
+to = "#6B996F"
+textures = [7]
+hue_range = 25
+min_saturation = 0.08
+
+[[costume.portrait_tint]]
+from = "#85A6A6"
+to = "#74A678"
+hue_range = 14
+min_saturation = 0.06
+max_saturation = 0.3
+
+[[costume]]
+character = "allegretto"
+name = "blue"
+label = "Blue"
+
+[[costume.tint]]
+from = "#7F9997"
+to = "#6B7A99"
+textures = [7]
+hue_range = 25
+min_saturation = 0.08
+
+[[costume.portrait_tint]]
+from = "#85A6A6"
+to = "#7485A6"
+hue_range = 14
+min_saturation = 0.06
+max_saturation = 0.3
+
+[[costume]]
+character = "allegretto"
+name = "violet"
+label = "Violet"
+
+[[costume.tint]]
+from = "#7F9997"
+to = "#826B99"
+textures = [7]
+hue_range = 25
+min_saturation = 0.08
+
+[[costume.portrait_tint]]
+from = "#85A6A6"
+to = "#8D74A6"
+hue_range = 14
+min_saturation = 0.06
+max_saturation = 0.3
+
+[[costume]]
+character = "allegretto"
+name = "pink"
+label = "Pink"
+
+[[costume.tint]]
+from = "#7F9997"
+to = "#996B82"
+textures = [7]
+hue_range = 25
+min_saturation = 0.08
+
+[[costume.portrait_tint]]
+from = "#85A6A6"
+to = "#A6748D"
+hue_range = 14
+min_saturation = 0.06
+max_saturation = 0.3
+
+[[costume]]
+character = "allegretto"
+name = "noir"
+label = "Noir"
+
+[[costume.tint]]
+from = "#7F9997"
+to = "#343838"
+textures = [7]
+hue_range = 25
+min_saturation = 0.08
+
+[[costume.portrait_tint]]
+from = "#85A6A6"
+to = "#343838"
+hue_range = 14
+min_saturation = 0.06
+max_saturation = 0.3
+
+[[costume]]
+character = "allegretto"
+name = "snow"
+label = "Snow"
+
+[[costume.tint]]
+from = "#7F9997"
+to = "#D0D9D8"
+textures = [7]
+hue_range = 25
+min_saturation = 0.08
+
+[[costume.portrait_tint]]
+from = "#85A6A6"
+to = "#D0D9D9"
+hue_range = 14
+min_saturation = 0.06
+max_saturation = 0.3
+
+# Beat
+
+[[costume]]
+character = "beat"
+name = "red"
+label = "Red"
+
+[[costume.tint]]
+from = "#CCCA85"
+to = "#CC8585"
+textures = [1, 4, 6]
+hue_range = 14
+min_saturation = 0.28
+
+[[costume.portrait_tint]]
+from = "#CED96C"
+to = "#D96C6C"
+hue_range = 14
+min_saturation = 0.3
+min_value = 0.65
+
+[[costume]]
+character = "beat"
+name = "green"
+label = "Green"
+
+[[costume.tint]]
+from = "#CCCA85"
+to = "#85CC8B"
+textures = [1, 4, 6]
+hue_range = 14
+min_saturation = 0.28
+
+[[costume.portrait_tint]]
+from = "#CED96C"
+to = "#6CD975"
+hue_range = 14
+min_saturation = 0.3
+min_value = 0.65
+
+[[costume]]
+character = "beat"
+name = "teal"
+label = "Teal"
+
+[[costume.tint]]
+from = "#CCCA85"
+to = "#85CCCC"
+textures = [1, 4, 6]
+hue_range = 14
+min_saturation = 0.28
+
+[[costume.portrait_tint]]
+from = "#CED96C"
+to = "#6CD9D9"
+hue_range = 14
+min_saturation = 0.3
+min_value = 0.65
+
+[[costume]]
+character = "beat"
+name = "blue"
+label = "Blue"
+
+[[costume.tint]]
+from = "#CCCA85"
+to = "#859CCC"
+textures = [1, 4, 6]
+hue_range = 14
+min_saturation = 0.28
+
+[[costume.portrait_tint]]
+from = "#CED96C"
+to = "#6C90D9"
+hue_range = 14
+min_saturation = 0.3
+min_value = 0.65
+
+[[costume]]
+character = "beat"
+name = "violet"
+label = "Violet"
+
+[[costume.tint]]
+from = "#CCCA85"
+to = "#A885CC"
+textures = [1, 4, 6]
+hue_range = 14
+min_saturation = 0.28
+
+[[costume.portrait_tint]]
+from = "#CED96C"
+to = "#A36CD9"
+hue_range = 14
+min_saturation = 0.3
+min_value = 0.65
+
+[[costume]]
+character = "beat"
+name = "pink"
+label = "Pink"
+
+[[costume.tint]]
+from = "#CCCA85"
+to = "#CC85A8"
+textures = [1, 4, 6]
+hue_range = 14
+min_saturation = 0.28
+
+[[costume.portrait_tint]]
+from = "#CED96C"
+to = "#D96CA3"
+hue_range = 14
+min_saturation = 0.3
+min_value = 0.65
+
+[[costume]]
+character = "beat"
+name = "noir"
+label = "Noir"
+
+[[costume.tint]]
+from = "#CCCA85"
+to = "#383834"
+textures = [1, 4, 6]
+hue_range = 14
+min_saturation = 0.28
+
+[[costume.portrait_tint]]
+from = "#CED96C"
+to = "#383834"
+hue_range = 14
+min_saturation = 0.3
+min_value = 0.65
+
+[[costume]]
+character = "beat"
+name = "snow"
+label = "Snow"
+
+[[costume.tint]]
+from = "#CCCA85"
+to = "#D9D8D0"
+textures = [1, 4, 6]
+hue_range = 14
+min_saturation = 0.28
+
+[[costume.portrait_tint]]
+from = "#CED96C"
+to = "#D8D9D0"
+hue_range = 14
+min_saturation = 0.3
+min_value = 0.65
+
+# Claves
+
+[[costume]]
+character = "claves"
+name = "red"
+label = "Red"
+
+[[costume.tint]]
+from = "#4C4C4C"
+to = "#4C2A2A"
+textures = [1, 4]
+max_saturation = 0.12
+max_value = 0.6
+
+[[costume.portrait_tint]]
+from = "#4C4C4C"
+to = "#4C2A2A"
+max_saturation = 0.12
+min_value = 0.08
+max_value = 0.5
+
+[[costume]]
+character = "claves"
+name = "gold"
+label = "Gold"
+
+[[costume.tint]]
+from = "#4C4C4C"
+to = "#4C422A"
+textures = [1, 4]
+max_saturation = 0.12
+max_value = 0.6
+
+[[costume.portrait_tint]]
+from = "#4C4C4C"
+to = "#4C422A"
+max_saturation = 0.12
+min_value = 0.08
+max_value = 0.5
+
+[[costume]]
+character = "claves"
+name = "green"
+label = "Green"
+
+[[costume.tint]]
+from = "#4C4C4C"
+to = "#2A4C2D"
+textures = [1, 4]
+max_saturation = 0.12
+max_value = 0.6
+
+[[costume.portrait_tint]]
+from = "#4C4C4C"
+to = "#2A4C2D"
+max_saturation = 0.12
+min_value = 0.08
+max_value = 0.5
+
+[[costume]]
+character = "claves"
+name = "teal"
+label = "Teal"
+
+[[costume.tint]]
+from = "#4C4C4C"
+to = "#2A4C4C"
+textures = [1, 4]
+max_saturation = 0.12
+max_value = 0.6
+
+[[costume.portrait_tint]]
+from = "#4C4C4C"
+to = "#2A4C4C"
+max_saturation = 0.12
+min_value = 0.08
+max_value = 0.5
+
+[[costume]]
+character = "claves"
+name = "blue"
+label = "Blue"
+
+[[costume.tint]]
+from = "#4C4C4C"
+to = "#2A364C"
+textures = [1, 4]
+max_saturation = 0.12
+max_value = 0.6
+
+[[costume.portrait_tint]]
+from = "#4C4C4C"
+to = "#2A364C"
+max_saturation = 0.12
+min_value = 0.08
+max_value = 0.5
+
+[[costume]]
+character = "claves"
+name = "violet"
+label = "Violet"
+
+[[costume.tint]]
+from = "#4C4C4C"
+to = "#3B2A4C"
+textures = [1, 4]
+max_saturation = 0.12
+max_value = 0.6
+
+[[costume.portrait_tint]]
+from = "#4C4C4C"
+to = "#3B2A4C"
+max_saturation = 0.12
+min_value = 0.08
+max_value = 0.5
+
+[[costume]]
+character = "claves"
+name = "pink"
+label = "Pink"
+
+[[costume.tint]]
+from = "#4C4C4C"
+to = "#4C2A3B"
+textures = [1, 4]
+max_saturation = 0.12
+max_value = 0.6
+
+[[costume.portrait_tint]]
+from = "#4C4C4C"
+to = "#4C2A3B"
+max_saturation = 0.12
+min_value = 0.08
+max_value = 0.5
+
+[[costume]]
+character = "claves"
+name = "silver"
+label = "Silver"
+
+[[costume.tint]]
+from = "#4C4C4C"
+to = "#B2B2B2"
+textures = [1, 4]
+max_saturation = 0.12
+max_value = 0.6
+
+[[costume.portrait_tint]]
+from = "#4C4C4C"
+to = "#B2B2B2"
+max_saturation = 0.12
+min_value = 0.08
+max_value = 0.5
+
+# Crescendo
+
+[[costume]]
+character = "crescendo"
+name = "red"
+label = "Red"
+
+[[costume.tint]]
+from = "#2D3859"
+to = "#592D2D"
+textures = [3, 4, 5]
+hue_range = 20
+min_saturation = 0.25
+
+[[costume.portrait_tint]]
+from = "#454973"
+to = "#734545"
+hue_range = 25
+min_saturation = 0.2
+
+[[costume]]
+character = "crescendo"
+name = "gold"
+label = "Gold"
+
+[[costume.tint]]
+from = "#2D3859"
+to = "#594A26"
+textures = [3, 4, 5]
+hue_range = 20
+min_saturation = 0.25
+
+[[costume.portrait_tint]]
+from = "#454973"
+to = "#73633E"
+hue_range = 25
+min_saturation = 0.2
+
+[[costume]]
+character = "crescendo"
+name = "green"
+label = "Green"
+
+[[costume.tint]]
+from = "#2D3859"
+to = "#2D5930"
+textures = [3, 4, 5]
+hue_range = 20
+min_saturation = 0.25
+
+[[costume.portrait_tint]]
+from = "#454973"
+to = "#457349"
+hue_range = 25
+min_saturation = 0.2
+
+[[costume]]
+character = "crescendo"
+name = "teal"
+label = "Teal"
+
+[[costume.tint]]
+from = "#2D3859"
+to = "#2D5959"
+textures = [3, 4, 5]
+hue_range = 20
+min_saturation = 0.25
+
+[[costume.portrait_tint]]
+from = "#454973"
+to = "#457373"
+hue_range = 25
+min_saturation = 0.2
+
+[[costume]]
+character = "crescendo"
+name = "violet"
+label = "Violet"
+
+[[costume.tint]]
+from = "#2D3859"
+to = "#432D59"
+textures = [3, 4, 5]
+hue_range = 20
+min_saturation = 0.25
+
+[[costume.portrait_tint]]
+from = "#454973"
+to = "#5C4573"
+hue_range = 25
+min_saturation = 0.2
+
+[[costume]]
+character = "crescendo"
+name = "pink"
+label = "Pink"
+
+[[costume.tint]]
+from = "#2D3859"
+to = "#592D43"
+textures = [3, 4, 5]
+hue_range = 20
+min_saturation = 0.25
+
+[[costume.portrait_tint]]
+from = "#454973"
+to = "#73455C"
+hue_range = 25
+min_saturation = 0.2
+
+[[costume]]
+character = "crescendo"
+name = "noir"
+label = "Noir"
+
+[[costume.tint]]
+from = "#2D3859"
+to = "#343538"
+textures = [3, 4, 5]
+hue_range = 20
+min_saturation = 0.25
+
+[[costume.portrait_tint]]
+from = "#454973"
+to = "#343438"
+hue_range = 25
+min_saturation = 0.2
+
+[[costume]]
+character = "crescendo"
+name = "snow"
+label = "Snow"
+
+[[costume.tint]]
+from = "#2D3859"
+to = "#D0D2D9"
+textures = [3, 4, 5]
+hue_range = 20
+min_saturation = 0.25
+
+[[costume.portrait_tint]]
+from = "#454973"
+to = "#D0D1D9"
+hue_range = 25
+min_saturation = 0.2
+
+# Falsetto
+
+[[costume]]
+character = "falsetto"
+name = "red"
+label = "Red"
+
+[[costume.tint]]
+from = "#2C3E5C"
+to = "#5C2C2C"
+textures = [1, 3, 4, 7, 9]
+hue_range = 18
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#2E4773"
+to = "#732E2E"
+hue_range = 18
+min_saturation = 0.35
+
+[[costume]]
+character = "falsetto"
+name = "gold"
+label = "Gold"
+
+[[costume.tint]]
+from = "#2C3E5C"
+to = "#5C4B25"
+textures = [1, 3, 4, 7, 9]
+hue_range = 18
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#2E4773"
+to = "#735B24"
+hue_range = 18
+min_saturation = 0.35
+
+[[costume]]
+character = "falsetto"
+name = "green"
+label = "Green"
+
+[[costume.tint]]
+from = "#2C3E5C"
+to = "#2C5C30"
+textures = [1, 3, 4, 7, 9]
+hue_range = 18
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#2E4773"
+to = "#2E7334"
+hue_range = 18
+min_saturation = 0.35
+
+[[costume]]
+character = "falsetto"
+name = "teal"
+label = "Teal"
+
+[[costume.tint]]
+from = "#2C3E5C"
+to = "#2C5C5C"
+textures = [1, 3, 4, 7, 9]
+hue_range = 18
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#2E4773"
+to = "#2E7373"
+hue_range = 18
+min_saturation = 0.35
+
+[[costume]]
+character = "falsetto"
+name = "violet"
+label = "Violet"
+
+[[costume.tint]]
+from = "#2C3E5C"
+to = "#442C5C"
+textures = [1, 3, 4, 7, 9]
+hue_range = 18
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#2E4773"
+to = "#502E73"
+hue_range = 18
+min_saturation = 0.35
+
+[[costume]]
+character = "falsetto"
+name = "pink"
+label = "Pink"
+
+[[costume.tint]]
+from = "#2C3E5C"
+to = "#5C2C44"
+textures = [1, 3, 4, 7, 9]
+hue_range = 18
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#2E4773"
+to = "#732E50"
+hue_range = 18
+min_saturation = 0.35
+
+[[costume]]
+character = "falsetto"
+name = "noir"
+label = "Noir"
+
+[[costume.tint]]
+from = "#2C3E5C"
+to = "#343538"
+textures = [1, 3, 4, 7, 9]
+hue_range = 18
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#2E4773"
+to = "#343538"
+hue_range = 18
+min_saturation = 0.35
+
+[[costume]]
+character = "falsetto"
+name = "snow"
+label = "Snow"
+
+[[costume.tint]]
+from = "#2C3E5C"
+to = "#D0D3D9"
+textures = [1, 3, 4, 7, 9]
+hue_range = 18
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#2E4773"
+to = "#D0D3D9"
+hue_range = 18
+min_saturation = 0.35
+
+# Frederic
+
+[[costume]]
+character = "frederic"
+name = "red"
+label = "Red"
+
+[[costume.tint]]
+from = "#252238"
+to = "#522525"
+textures = [1, 2, 3]
+hue_range = 25
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#2D2A4C"
+to = "#522525"
+hue_range = 20
+min_saturation = 0.38
+min_value = 0.12
+
+[[costume]]
+character = "frederic"
+name = "gold"
+label = "Gold"
+
+[[costume.tint]]
+from = "#252238"
+to = "#524425"
+textures = [1, 2, 3]
+hue_range = 25
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#2D2A4C"
+to = "#524425"
+hue_range = 20
+min_saturation = 0.38
+min_value = 0.12
+
+[[costume]]
+character = "frederic"
+name = "green"
+label = "Green"
+
+[[costume.tint]]
+from = "#252238"
+to = "#255228"
+textures = [1, 2, 3]
+hue_range = 25
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#2D2A4C"
+to = "#255228"
+hue_range = 20
+min_saturation = 0.38
+min_value = 0.12
+
+[[costume]]
+character = "frederic"
+name = "teal"
+label = "Teal"
+
+[[costume.tint]]
+from = "#252238"
+to = "#255252"
+textures = [1, 2, 3]
+hue_range = 25
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#2D2A4C"
+to = "#255252"
+hue_range = 20
+min_saturation = 0.38
+min_value = 0.12
+
+[[costume]]
+character = "frederic"
+name = "blue"
+label = "Blue"
+
+[[costume.tint]]
+from = "#252238"
+to = "#253452"
+textures = [1, 2, 3]
+hue_range = 25
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#2D2A4C"
+to = "#253452"
+hue_range = 20
+min_saturation = 0.38
+min_value = 0.12
+
+[[costume]]
+character = "frederic"
+name = "pink"
+label = "Pink"
+
+[[costume.tint]]
+from = "#252238"
+to = "#52253B"
+textures = [1, 2, 3]
+hue_range = 25
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#2D2A4C"
+to = "#52253B"
+hue_range = 20
+min_saturation = 0.38
+min_value = 0.12
+
+[[costume]]
+character = "frederic"
+name = "noir"
+label = "Noir"
+
+[[costume.tint]]
+from = "#252238"
+to = "#343438"
+textures = [1, 2, 3]
+hue_range = 25
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#2D2A4C"
+to = "#343438"
+hue_range = 20
+min_saturation = 0.38
+min_value = 0.12
+
+[[costume]]
+character = "frederic"
+name = "snow"
+label = "Snow"
+
+[[costume.tint]]
+from = "#252238"
+to = "#D2D0D9"
+textures = [1, 2, 3]
+hue_range = 25
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#2D2A4C"
+to = "#D1D0D9"
+hue_range = 20
+min_saturation = 0.38
+min_value = 0.12
+
+# Jazz
+
+[[costume]]
+character = "jazz"
+name = "gold"
+label = "Gold"
+
+[[costume.tint]]
+from = "#4C2A1F"
+to = "#4C3D18"
+textures = [0, 2, 6]
+hue_range = 15
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#4C2A1F"
+to = "#4C3D18"
+hue_range = 15
+min_saturation = 0.45
+max_value = 0.38
+
+[[costume]]
+character = "jazz"
+name = "green"
+label = "Green"
+
+[[costume.tint]]
+from = "#4C2A1F"
+to = "#1F4C22"
+textures = [0, 2, 6]
+hue_range = 15
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#4C2A1F"
+to = "#1F4C22"
+hue_range = 15
+min_saturation = 0.45
+max_value = 0.38
+
+[[costume]]
+character = "jazz"
+name = "teal"
+label = "Teal"
+
+[[costume.tint]]
+from = "#4C2A1F"
+to = "#1F4C4C"
+textures = [0, 2, 6]
+hue_range = 15
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#4C2A1F"
+to = "#1F4C4C"
+hue_range = 15
+min_saturation = 0.45
+max_value = 0.38
+
+[[costume]]
+character = "jazz"
+name = "blue"
+label = "Blue"
+
+[[costume.tint]]
+from = "#4C2A1F"
+to = "#1F2E4C"
+textures = [0, 2, 6]
+hue_range = 15
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#4C2A1F"
+to = "#1F2E4C"
+hue_range = 15
+min_saturation = 0.45
+max_value = 0.38
+
+[[costume]]
+character = "jazz"
+name = "violet"
+label = "Violet"
+
+[[costume.tint]]
+from = "#4C2A1F"
+to = "#361F4C"
+textures = [0, 2, 6]
+hue_range = 15
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#4C2A1F"
+to = "#361F4C"
+hue_range = 15
+min_saturation = 0.45
+max_value = 0.38
+
+[[costume]]
+character = "jazz"
+name = "pink"
+label = "Pink"
+
+[[costume.tint]]
+from = "#4C2A1F"
+to = "#4C1F36"
+textures = [0, 2, 6]
+hue_range = 15
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#4C2A1F"
+to = "#4C1F36"
+hue_range = 15
+min_saturation = 0.45
+max_value = 0.38
+
+[[costume]]
+character = "jazz"
+name = "noir"
+label = "Noir"
+
+[[costume.tint]]
+from = "#4C2A1F"
+to = "#383534"
+textures = [0, 2, 6]
+hue_range = 15
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#4C2A1F"
+to = "#383534"
+hue_range = 15
+min_saturation = 0.45
+max_value = 0.38
+
+[[costume]]
+character = "jazz"
+name = "snow"
+label = "Snow"
+
+[[costume.tint]]
+from = "#4C2A1F"
+to = "#D9D2D0"
+textures = [0, 2, 6]
+hue_range = 15
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#4C2A1F"
+to = "#D9D2D0"
+hue_range = 15
+min_saturation = 0.45
+max_value = 0.38
+
+# March
+
+[[costume]]
+character = "march"
+name = "red"
+label = "Red"
+
+[[costume.tint]]
+from = "#6C9E91"
+to = "#9E6C6C"
+textures = [7]
+hue_range = 22
+min_saturation = 0.18
+
+[[costume.portrait_tint]]
+from = "#74A69D"
+to = "#A67474"
+hue_range = 28
+min_saturation = 0.1
+
+[[costume]]
+character = "march"
+name = "gold"
+label = "Gold"
+
+[[costume.tint]]
+from = "#6C9E91"
+to = "#9E8D64"
+textures = [7]
+hue_range = 22
+min_saturation = 0.18
+
+[[costume.portrait_tint]]
+from = "#74A69D"
+to = "#A6956D"
+hue_range = 28
+min_saturation = 0.1
+
+[[costume]]
+character = "march"
+name = "green"
+label = "Green"
+
+[[costume.tint]]
+from = "#6C9E91"
+to = "#6C9E70"
+textures = [7]
+hue_range = 22
+min_saturation = 0.18
+
+[[costume.portrait_tint]]
+from = "#74A69D"
+to = "#74A678"
+hue_range = 28
+min_saturation = 0.1
+
+[[costume]]
+character = "march"
+name = "blue"
+label = "Blue"
+
+[[costume.tint]]
+from = "#6C9E91"
+to = "#6C7C9E"
+textures = [7]
+hue_range = 22
+min_saturation = 0.18
+
+[[costume.portrait_tint]]
+from = "#74A69D"
+to = "#7485A6"
+hue_range = 28
+min_saturation = 0.1
+
+[[costume]]
+character = "march"
+name = "violet"
+label = "Violet"
+
+[[costume.tint]]
+from = "#6C9E91"
+to = "#856C9E"
+textures = [7]
+hue_range = 22
+min_saturation = 0.18
+
+[[costume.portrait_tint]]
+from = "#74A69D"
+to = "#8D74A6"
+hue_range = 28
+min_saturation = 0.1
+
+[[costume]]
+character = "march"
+name = "pink"
+label = "Pink"
+
+[[costume.tint]]
+from = "#6C9E91"
+to = "#9E6C85"
+textures = [7]
+hue_range = 22
+min_saturation = 0.18
+
+[[costume.portrait_tint]]
+from = "#74A69D"
+to = "#A6748D"
+hue_range = 28
+min_saturation = 0.1
+
+[[costume]]
+character = "march"
+name = "noir"
+label = "Noir"
+
+[[costume.tint]]
+from = "#6C9E91"
+to = "#343837"
+textures = [7]
+hue_range = 22
+min_saturation = 0.18
+
+[[costume.portrait_tint]]
+from = "#74A69D"
+to = "#343837"
+hue_range = 28
+min_saturation = 0.1
+
+[[costume]]
+character = "march"
+name = "snow"
+label = "Snow"
+
+[[costume.tint]]
+from = "#6C9E91"
+to = "#D0D9D7"
+textures = [7]
+hue_range = 22
+min_saturation = 0.18
+
+[[costume.portrait_tint]]
+from = "#74A69D"
+to = "#D0D9D7"
+hue_range = 28
+min_saturation = 0.1
+
+# Polka
+
+[[costume]]
+character = "polka"
+name = "gold"
+label = "Gold"
+
+[[costume.tint]]
+from = "#B4443A"
+to = "#C8A030"
+textures = [2, 4, 5, 7, 10]
+hue_range = 18
+min_saturation = 0.38
+
+[[costume.tint]]
+from = "#86A6D6"
+to = "#E8D8A0"
+textures = [15]
+hue_range = 32
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#B4443A"
+to = "#C8A030"
+hue_range = 18
+min_saturation = 0.38
+
+[[costume]]
+character = "polka"
+name = "green"
+label = "Green"
+
+[[costume.tint]]
+from = "#B4443A"
+to = "#3E9A48"
+textures = [2, 4, 5, 7, 10]
+hue_range = 18
+min_saturation = 0.38
+
+[[costume.tint]]
+from = "#86A6D6"
+to = "#C8E0A0"
+textures = [15]
+hue_range = 32
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#B4443A"
+to = "#3E9A48"
+hue_range = 18
+min_saturation = 0.38
+
+[[costume]]
+character = "polka"
+name = "teal"
+label = "Teal"
+
+[[costume.tint]]
+from = "#B4443A"
+to = "#2E9A9A"
+textures = [2, 4, 5, 7, 10]
+hue_range = 18
+min_saturation = 0.38
+
+[[costume.tint]]
+from = "#86A6D6"
+to = "#A0D8D0"
+textures = [15]
+hue_range = 32
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#B4443A"
+to = "#2E9A9A"
+hue_range = 18
+min_saturation = 0.38
+
+[[costume]]
+character = "polka"
+name = "blue"
+label = "Blue"
+
+[[costume.tint]]
+from = "#B4443A"
+to = "#3E6EC0"
+textures = [2, 4, 5, 7, 10]
+hue_range = 18
+min_saturation = 0.38
+
+[[costume.tint]]
+from = "#86A6D6"
+to = "#E0B040"
+textures = [15]
+hue_range = 32
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#B4443A"
+to = "#3E6EC0"
+hue_range = 18
+min_saturation = 0.38
+
+[[costume]]
+character = "polka"
+name = "violet"
+label = "Violet"
+
+[[costume.tint]]
+from = "#B4443A"
+to = "#7444BD"
+textures = [2, 4, 5, 7, 10]
+hue_range = 18
+min_saturation = 0.38
+
+[[costume.tint]]
+from = "#86A6D6"
+to = "#D0A0E0"
+textures = [15]
+hue_range = 32
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#B4443A"
+to = "#7444BD"
+hue_range = 18
+min_saturation = 0.38
+
+[[costume]]
+character = "polka"
+name = "pink"
+label = "Pink"
+
+[[costume.tint]]
+from = "#B4443A"
+to = "#D04A8A"
+textures = [2, 4, 5, 7, 10]
+hue_range = 18
+min_saturation = 0.38
+
+[[costume.tint]]
+from = "#86A6D6"
+to = "#F0C0D8"
+textures = [15]
+hue_range = 32
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#B4443A"
+to = "#D04A8A"
+hue_range = 18
+min_saturation = 0.38
+
+[[costume]]
+character = "polka"
+name = "noir"
+label = "Noir"
+
+[[costume.tint]]
+from = "#B4443A"
+to = "#302E30"
+textures = [2, 4, 5, 7, 10]
+hue_range = 18
+min_saturation = 0.38
+
+[[costume.tint]]
+from = "#86A6D6"
+to = "#C04060"
+textures = [15]
+hue_range = 32
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#B4443A"
+to = "#302E30"
+hue_range = 18
+min_saturation = 0.38
+
+[[costume]]
+character = "polka"
+name = "snow"
+label = "Snow"
+
+[[costume.tint]]
+from = "#B4443A"
+to = "#E0E0E4"
+textures = [2, 4, 5, 7, 10]
+hue_range = 18
+min_saturation = 0.38
+
+[[costume.tint]]
+from = "#86A6D6"
+to = "#A0B8E0"
+textures = [15]
+hue_range = 32
+min_saturation = 0.2
+
+[[costume.portrait_tint]]
+from = "#B4443A"
+to = "#E0E0E4"
+hue_range = 18
+min_saturation = 0.38
+
+# The PS3's first New Costume in other colours. Xbox 360 data has no such
+# costume, so these are skipped there.
+
+[[costume]]
+character = "polka"
+name = "mint_pink"
+label = "Rose"
+base = "ps3/2"
+
+[[costume.tint]]
+from = "#A2C7B2"
+to = "#E0B0C8"
+hue_range = 25
+min_saturation = 0.08
+
+[[costume.portrait_tint]]
+from = "#A2C7B2"
+to = "#E0B0C8"
+hue_range = 25
+min_saturation = 0.08
+
+[[costume]]
+character = "polka"
+name = "mint_sky"
+label = "Sky"
+base = "ps3/2"
+
+[[costume.tint]]
+from = "#A2C7B2"
+to = "#A8C8E8"
+hue_range = 25
+min_saturation = 0.08
+
+[[costume.portrait_tint]]
+from = "#A2C7B2"
+to = "#A8C8E8"
+hue_range = 25
+min_saturation = 0.08
+
+# Salsa
+
+[[costume]]
+character = "salsa"
+name = "red"
+label = "Red"
+
+[[costume.tint]]
+from = "#BF7143"
+to = "#BF4343"
+textures = [0, 8]
+hue_range = 12
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#CC7833"
+to = "#CC3333"
+hue_range = 7
+min_saturation = 0.6
+
+[[costume]]
+character = "salsa"
+name = "green"
+label = "Green"
+
+[[costume.tint]]
+from = "#BF7143"
+to = "#43BF4D"
+textures = [0, 8]
+hue_range = 12
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#CC7833"
+to = "#33CC40"
+hue_range = 7
+min_saturation = 0.6
+
+[[costume]]
+character = "salsa"
+name = "teal"
+label = "Teal"
+
+[[costume.tint]]
+from = "#BF7143"
+to = "#43BFBF"
+textures = [0, 8]
+hue_range = 12
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#CC7833"
+to = "#33CCCC"
+hue_range = 7
+min_saturation = 0.6
+
+[[costume]]
+character = "salsa"
+name = "blue"
+label = "Blue"
+
+[[costume.tint]]
+from = "#BF7143"
+to = "#436CBF"
+textures = [0, 8]
+hue_range = 12
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#CC7833"
+to = "#3366CC"
+hue_range = 7
+min_saturation = 0.6
+
+[[costume]]
+character = "salsa"
+name = "violet"
+label = "Violet"
+
+[[costume.tint]]
+from = "#BF7143"
+to = "#8143BF"
+textures = [0, 8]
+hue_range = 12
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#CC7833"
+to = "#8033CC"
+hue_range = 7
+min_saturation = 0.6
+
+[[costume]]
+character = "salsa"
+name = "pink"
+label = "Pink"
+
+[[costume.tint]]
+from = "#BF7143"
+to = "#BF4381"
+textures = [0, 8]
+hue_range = 12
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#CC7833"
+to = "#CC3380"
+hue_range = 7
+min_saturation = 0.6
+
+[[costume]]
+character = "salsa"
+name = "noir"
+label = "Noir"
+
+[[costume.tint]]
+from = "#BF7143"
+to = "#383534"
+textures = [0, 8]
+hue_range = 12
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#CC7833"
+to = "#383634"
+hue_range = 7
+min_saturation = 0.6
+
+[[costume]]
+character = "salsa"
+name = "snow"
+label = "Snow"
+
+[[costume.tint]]
+from = "#BF7143"
+to = "#D9D3D0"
+textures = [0, 8]
+hue_range = 12
+min_saturation = 0.45
+
+[[costume.portrait_tint]]
+from = "#CC7833"
+to = "#D9D4D0"
+hue_range = 7
+min_saturation = 0.6
+
+# Serenade
+
+[[costume]]
+character = "serenade"
+name = "red"
+label = "Red"
+portrait = "costumes/serenade_red_status.dds"
+face_portrait = "costumes/serenade_red_face.dds"
+small_face_portrait = "costumes/serenade_red_small_face.dds"
+
+[[costume.tint]]
+from = "#D9D2AD"
+to = "#D99898"
+textures = [3, 4, 7, 8, 9]
+hue_range = 18
+min_saturation = 0.08
+max_saturation = 0.35
+
+[[costume]]
+character = "serenade"
+name = "green"
+label = "Green"
+portrait = "costumes/serenade_green_status.dds"
+face_portrait = "costumes/serenade_green_face.dds"
+small_face_portrait = "costumes/serenade_green_small_face.dds"
+
+[[costume.tint]]
+from = "#D9D2AD"
+to = "#98D99D"
+textures = [3, 4, 7, 8, 9]
+hue_range = 18
+min_saturation = 0.08
+max_saturation = 0.35
+
+[[costume]]
+character = "serenade"
+name = "teal"
+label = "Teal"
+portrait = "costumes/serenade_teal_status.dds"
+face_portrait = "costumes/serenade_teal_face.dds"
+small_face_portrait = "costumes/serenade_teal_small_face.dds"
+
+[[costume.tint]]
+from = "#D9D2AD"
+to = "#98D9D9"
+textures = [3, 4, 7, 8, 9]
+hue_range = 18
+min_saturation = 0.08
+max_saturation = 0.35
+
+[[costume]]
+character = "serenade"
+name = "blue"
+label = "Blue"
+portrait = "costumes/serenade_blue_status.dds"
+face_portrait = "costumes/serenade_blue_face.dds"
+small_face_portrait = "costumes/serenade_blue_small_face.dds"
+
+[[costume.tint]]
+from = "#D9D2AD"
+to = "#98ADD9"
+textures = [3, 4, 7, 8, 9]
+hue_range = 18
+min_saturation = 0.08
+max_saturation = 0.35
+
+[[costume]]
+character = "serenade"
+name = "violet"
+label = "Violet"
+portrait = "costumes/serenade_violet_status.dds"
+face_portrait = "costumes/serenade_violet_face.dds"
+small_face_portrait = "costumes/serenade_violet_small_face.dds"
+
+[[costume.tint]]
+from = "#D9D2AD"
+to = "#B898D9"
+textures = [3, 4, 7, 8, 9]
+hue_range = 18
+min_saturation = 0.08
+max_saturation = 0.35
+
+[[costume]]
+character = "serenade"
+name = "pink"
+label = "Pink"
+portrait = "costumes/serenade_pink_status.dds"
+face_portrait = "costumes/serenade_pink_face.dds"
+small_face_portrait = "costumes/serenade_pink_small_face.dds"
+
+[[costume.tint]]
+from = "#D9D2AD"
+to = "#D998B8"
+textures = [3, 4, 7, 8, 9]
+hue_range = 18
+min_saturation = 0.08
+max_saturation = 0.35
+
+# Viola
+
+[[costume]]
+character = "viola"
+name = "red"
+label = "Red"
+
+[[costume.tint]]
+from = "#D4A974"
+to = "#D47474"
+textures = [2, 9, 11]
+hue_range = 12
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#997245"
+to = "#994545"
+hue_range = 8
+min_saturation = 0.45
+max_value = 0.75
+
+[[costume]]
+character = "viola"
+name = "green"
+label = "Green"
+
+[[costume.tint]]
+from = "#D4A974"
+to = "#74D47C"
+textures = [2, 9, 11]
+hue_range = 12
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#997245"
+to = "#45994C"
+hue_range = 8
+min_saturation = 0.45
+max_value = 0.75
+
+[[costume]]
+character = "viola"
+name = "teal"
+label = "Teal"
+
+[[costume.tint]]
+from = "#D4A974"
+to = "#74D4D4"
+textures = [2, 9, 11]
+hue_range = 12
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#997245"
+to = "#459999"
+hue_range = 8
+min_saturation = 0.45
+max_value = 0.75
+
+[[costume]]
+character = "viola"
+name = "blue"
+label = "Blue"
+
+[[costume.tint]]
+from = "#D4A974"
+to = "#7494D4"
+textures = [2, 9, 11]
+hue_range = 12
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#997245"
+to = "#456199"
+hue_range = 8
+min_saturation = 0.45
+max_value = 0.75
+
+[[costume]]
+character = "viola"
+name = "violet"
+label = "Violet"
+
+[[costume.tint]]
+from = "#D4A974"
+to = "#A474D4"
+textures = [2, 9, 11]
+hue_range = 12
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#997245"
+to = "#6F4599"
+hue_range = 8
+min_saturation = 0.45
+max_value = 0.75
+
+[[costume]]
+character = "viola"
+name = "pink"
+label = "Pink"
+
+[[costume.tint]]
+from = "#D4A974"
+to = "#D474A4"
+textures = [2, 9, 11]
+hue_range = 12
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#997245"
+to = "#99456F"
+hue_range = 8
+min_saturation = 0.45
+max_value = 0.75
+
+[[costume]]
+character = "viola"
+name = "noir"
+label = "Noir"
+
+[[costume.tint]]
+from = "#D4A974"
+to = "#383634"
+textures = [2, 9, 11]
+hue_range = 12
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#997245"
+to = "#383634"
+hue_range = 8
+min_saturation = 0.45
+max_value = 0.75
+
+[[costume]]
+character = "viola"
+name = "snow"
+label = "Snow"
+
+[[costume.tint]]
+from = "#D4A974"
+to = "#D9D5D0"
+textures = [2, 9, 11]
+hue_range = 12
+min_saturation = 0.3
+
+[[costume.portrait_tint]]
+from = "#997245"
+to = "#D9D5D0"
+hue_range = 8
+min_saturation = 0.45
+max_value = 0.75
