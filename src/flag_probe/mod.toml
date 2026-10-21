@@ -1,7 +1,0 @@
-manifest_version = 2
-name = "Flag API Probe"
-version = "1.0.0"
-game_version = "1.2.0"
-author = "BiRabittoh"
-description = "Overlay (F11) that exercises the whole Flag API: live bank view, read/write single flags, snapshot and diff to find the flag behind an in-game event, scenario counter, reset, error paths and the flag event log."
-code = "flag_probe"

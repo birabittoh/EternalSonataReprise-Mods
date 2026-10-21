@@ -1,0 +1,7 @@
+manifest_version = 2
+name = "Flags Overlay"
+version = "1.0.0"
+game_version = "1.3.3"
+author = "BiRabittoh"
+description = "Overlay (F11) that exercises the whole Flag API: live bank view, read/write single flags, snapshot and diff to find the flag behind an in-game event, scenario counter, Encore, the PS3 camp menu flags, reset, error paths and the flag event log."
+code = "flags_overlay"

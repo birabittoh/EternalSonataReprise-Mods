@@ -1,4 +1,4 @@
-// flag_probe: an overlay (F11) that exercises every part of the game's Flag
+// flags_overlay: an overlay (F11) that exercises every part of the game's Flag
 // API, so the whole surface can be checked in one place while playing.
 //
 // It shows, live:
@@ -12,6 +12,9 @@
 //     game just set is on screen. Watch mode does the same automatically
 //     every frame and logs it;
 //   * the scenario counter, read and written;
+//   * the Encore counter, save location and per slot Encore state;
+//   * the two PS3 camp menu flags (Scrapbook unlocked, costumes blocked), which
+//     are not bank flags;
 //   * every error path with the returned error code;
 //   * a log of the three flag events off the mod registry bus, cross-checked
 //     against the probe's own polling so a missing or extra event is flagged.
@@ -58,6 +61,7 @@ constexpr int kFlagBytes = ETERNALSONATA_FLAG_BYTES;
 // Listing every set flag would be thousands of rows late in the game, and the
 // list is only there to eyeball; past this the table says how many it hid.
 constexpr int kMaxListedFlags = 512;
+constexpr int kSaveSlots = 10;
 
 void* HostSymbol(const char* symbol) {
 #if defined(_WIN32)
@@ -85,6 +89,16 @@ struct FlagApi {
   EternalSonataResetFlagsFn reset = nullptr;
   EternalSonataGetScenarioCounterFn get_scenario = nullptr;
   EternalSonataSetScenarioCounterFn set_scenario = nullptr;
+  EternalSonataGetScrapbookUnlockedFn get_scrapbook = nullptr;
+  EternalSonataSetScrapbookUnlockedFn set_scrapbook = nullptr;
+  EternalSonataGetCostumesBlockedFn get_costumes_blocked = nullptr;
+  EternalSonataSetCostumesBlockedFn set_costumes_blocked = nullptr;
+  EternalSonataGetEncoreCountFn get_encore_count = nullptr;
+  EternalSonataSetEncoreCountFn set_encore_count = nullptr;
+  EternalSonataGetSaveLocationFn get_save_location = nullptr;
+  EternalSonataSetSaveLocationFn set_save_location = nullptr;
+  EternalSonataGetEncoreStateFn get_encore_state = nullptr;
+  EternalSonataGetSaveSlotEncoreStateFn get_slot_encore_state = nullptr;
 
   bool ok() const { return abi_version && get && set; }
 };
@@ -100,6 +114,16 @@ FlagApi LoadFlagApi() {
   Resolve(api.reset, "EternalSonataResetFlags");
   Resolve(api.get_scenario, "EternalSonataGetScenarioCounter");
   Resolve(api.set_scenario, "EternalSonataSetScenarioCounter");
+  Resolve(api.get_scrapbook, "EternalSonataGetScrapbookUnlocked");
+  Resolve(api.set_scrapbook, "EternalSonataSetScrapbookUnlocked");
+  Resolve(api.get_costumes_blocked, "EternalSonataGetCostumesBlocked");
+  Resolve(api.set_costumes_blocked, "EternalSonataSetCostumesBlocked");
+  Resolve(api.get_encore_count, "EternalSonataGetEncoreCount");
+  Resolve(api.set_encore_count, "EternalSonataSetEncoreCount");
+  Resolve(api.get_save_location, "EternalSonataGetSaveLocation");
+  Resolve(api.set_save_location, "EternalSonataSetSaveLocation");
+  Resolve(api.get_encore_state, "EternalSonataGetEncoreState");
+  Resolve(api.get_slot_encore_state, "EternalSonataGetSaveSlotEncoreState");
   return api;
 }
 
@@ -128,23 +152,23 @@ int CountSetBits(const std::vector<uint8_t>& bank) {
   return total;
 }
 
-class FlagProbeDialog : public rex::ui::ImGuiDialog {
+class FlagsOverlayDialog : public rex::ui::ImGuiDialog {
  public:
-  FlagProbeDialog(rex::ui::ImGuiDrawer* drawer, rex::Runtime* runtime)
+  FlagsOverlayDialog(rex::ui::ImGuiDrawer* drawer, rex::Runtime* runtime)
       : ImGuiDialog(drawer), runtime_(runtime), api_(LoadFlagApi()) {
     bank_.assign(kFlagBytes, 0);
     snapshot_.assign(kFlagBytes, 0);
     watch_.assign(kFlagBytes, 0);
 
     rex::ui::RegisterBind(
-        "bind_flag_probe", "F11", "Toggle the flag API probe",
+        "bind_flags_overlay", "F11", "Toggle the flags overlay",
         [this] { visible_ = !visible_; }, [this] { return visible_; },
-        "Flag API Probe");
+        "Flags Overlay");
 
     SubscribeToFlagEvents();
   }
 
-  ~FlagProbeDialog() override { rex::ui::UnregisterBind("bind_flag_probe"); }
+  ~FlagsOverlayDialog() override { rex::ui::UnregisterBind("bind_flags_overlay"); }
 
  protected:
   void OnDraw(ImGuiIO& io) override {
@@ -159,7 +183,7 @@ class FlagProbeDialog : public rex::ui::ImGuiDialog {
     }
 
     ImGui::SetNextWindowSize(ImVec2(900, 0), ImGuiCond_FirstUseEver);
-    if (!ImGui::Begin("Flag API Probe", &visible_, ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (!ImGui::Begin("Flags Overlay", &visible_, ImGuiWindowFlags_AlwaysAutoResize)) {
       ImGui::End();
       return;
     }
@@ -173,6 +197,10 @@ class FlagProbeDialog : public rex::ui::ImGuiDialog {
     DrawDiffSection();
     ImGui::Separator();
     DrawScenarioSection();
+    ImGui::Separator();
+    DrawCampMenuSection();
+    ImGui::Separator();
+    DrawEncoreSection();
     ImGui::Separator();
     DrawDangerSection();
     ImGui::Separator();
@@ -221,6 +249,16 @@ class FlagProbeDialog : public rex::ui::ImGuiDialog {
     note(api_.reset != nullptr, "ResetFlags");
     note(api_.get_scenario != nullptr, "GetScenarioCounter");
     note(api_.set_scenario != nullptr, "SetScenarioCounter");
+    note(api_.get_scrapbook != nullptr, "GetScrapbookUnlocked");
+    note(api_.set_scrapbook != nullptr, "SetScrapbookUnlocked");
+    note(api_.get_costumes_blocked != nullptr, "GetCostumesBlocked");
+    note(api_.set_costumes_blocked != nullptr, "SetCostumesBlocked");
+    note(api_.get_encore_count != nullptr, "GetEncoreCount");
+    note(api_.set_encore_count != nullptr, "SetEncoreCount");
+    note(api_.get_save_location != nullptr, "GetSaveLocation");
+    note(api_.set_save_location != nullptr, "SetSaveLocation");
+    note(api_.get_encore_state != nullptr, "GetEncoreState");
+    note(api_.get_slot_encore_state != nullptr, "GetSaveSlotEncoreState");
     if (!missing.empty()) {
       ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.3f, 1.0f), "Not exported by this host: %s",
                          missing.c_str());
@@ -384,6 +422,122 @@ class FlagProbeDialog : public rex::ui::ImGuiDialog {
     }
   }
 
+  // The two PS3 camp menu flags live outside the bank, so the bank view above
+  // never shows them. -1 reads as unavailable (360 data).
+  void DrawCampMenuFlag(const char* label, int value, int (*set)(int), const char* name) {
+    if (value < 0) {
+      ImGui::Text("%s: %s (%d)", label, ErrorName(value), value);
+      return;
+    }
+    ImGui::Text("%s: %d", label, value);
+    if (!set) {
+      return;
+    }
+    ImGui::SameLine();
+    ImGui::PushID(name);
+    if (ImGui::SmallButton("Set 1")) {
+      last_write_ = WriteResult(name, set(1));
+    }
+    ImGui::SameLine();
+    if (ImGui::SmallButton("Set 0")) {
+      last_write_ = WriteResult(name, set(0));
+    }
+    ImGui::PopID();
+  }
+
+  void DrawCampMenuSection() {
+    if (!api_.ok() || (!api_.get_scrapbook && !api_.get_costumes_blocked)) {
+      return;
+    }
+    ImGui::TextUnformatted("PS3 camp menu flags (not in the bank, saved with the game)");
+    if (api_.get_costumes_blocked) {
+      DrawCampMenuFlag("Costumes blocked", costumes_blocked_, api_.set_costumes_blocked,
+                       "SetCostumesBlocked");
+    }
+    if (api_.get_scrapbook) {
+      DrawCampMenuFlag("Scrapbook unlocked", scrapbook_, api_.set_scrapbook,
+                       "SetScrapbookUnlocked");
+    }
+  }
+
+  static std::string EncoreStateText(int state) {
+    if (state < 0) {
+      return std::string(ErrorName(state)) + " (" + std::to_string(state) + ")";
+    }
+    std::string text;
+    if (state & ETERNALSONATA_ENCORE_STATE_GAME_CLEAR) {
+      text += "Game Clear";
+    }
+    if (state & ETERNALSONATA_ENCORE_STATE_ENCORE) {
+      text += text.empty() ? "Encore" : " + Encore";
+    }
+    return text.empty() ? "none" : text;
+  }
+
+  // Encore (new game plus): a counter and a save location outside the bank.
+  // Setting the location to Game Clear while the save menu is open turns that
+  // save into a Game Clear one.
+  void DrawEncoreSection() {
+    if (!api_.ok() || !api_.get_encore_count) {
+      return;
+    }
+    ImGui::TextUnformatted("Encore (new game plus, outside the bank)");
+
+    if (encore_count_ < 0) {
+      ImGui::Text("Encore counter: %s (%d)", ErrorName(encore_count_), encore_count_);
+    } else {
+      ImGui::Text("Encore counter: %d (max %d)", encore_count_, ETERNALSONATA_ENCORE_COUNT_MAX);
+    }
+    if (api_.set_encore_count) {
+      ImGui::SetNextItemWidth(100.0f);
+      ImGui::InputInt("##encorecount", &encore_count_input_);
+      ImGui::SameLine();
+      if (ImGui::Button("Write Encore counter")) {
+        last_write_ = WriteResult("SetEncoreCount", api_.set_encore_count(encore_count_input_));
+      }
+    }
+
+    if (api_.get_save_location) {
+      if (save_location_ < 0) {
+        ImGui::Text("Save location: %s (%d)", ErrorName(save_location_), save_location_);
+      } else {
+        ImGui::Text("Save location: %d%s", save_location_,
+                    save_location_ == ETERNALSONATA_SAVE_LOCATION_GAME_CLEAR
+                        ? " (Game Clear)"
+                        : save_location_ == ETERNALSONATA_SAVE_LOCATION_DEBUG_SAVE
+                              ? " (Debug Save)"
+                              : "");
+      }
+      if (api_.set_save_location) {
+        ImGui::SetNextItemWidth(100.0f);
+        ImGui::InputInt("##savelocation", &save_location_input_);
+        ImGui::SameLine();
+        if (ImGui::Button("Write save location")) {
+          last_write_ =
+              WriteResult("SetSaveLocation", api_.set_save_location(save_location_input_));
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Make Game Clear")) {
+          last_write_ = WriteResult("SetSaveLocation(GAME_CLEAR)",
+                                    api_.set_save_location(ETERNALSONATA_SAVE_LOCATION_GAME_CLEAR));
+        }
+      }
+    }
+
+    if (api_.get_encore_state) {
+      ImGui::Text("Encore state in memory: %s", EncoreStateText(encore_state_).c_str());
+    }
+
+    if (api_.get_slot_encore_state) {
+      for (int slot = 0; slot < kSaveSlots; ++slot) {
+        const int state = slot_encore_state_[slot];
+        ImGui::Text("Slot %d: %s", slot + 1,
+                    state == ETERNALSONATA_FLAG_ERR_NO_SAVE ? "empty"
+                                                            : EncoreStateText(state).c_str());
+      }
+    }
+  }
+
   void DrawDangerSection() {
     if (!api_.ok() || !api_.reset) {
       return;
@@ -499,6 +653,15 @@ class FlagProbeDialog : public rex::ui::ImGuiDialog {
     flag_count_ = api_.count ? api_.count() : ETERNALSONATA_FLAG_COUNT;
     available_ = api_.available ? api_.available() != 0 : true;
     scenario_ = api_.get_scenario ? api_.get_scenario() : -1;
+    scrapbook_ = api_.get_scrapbook ? api_.get_scrapbook() : -1;
+    costumes_blocked_ = api_.get_costumes_blocked ? api_.get_costumes_blocked() : -1;
+    encore_count_ = api_.get_encore_count ? api_.get_encore_count() : -1;
+    save_location_ = api_.get_save_location ? api_.get_save_location() : -1;
+    encore_state_ = api_.get_encore_state ? api_.get_encore_state() : -1;
+    for (int slot = 0; slot < kSaveSlots; ++slot) {
+      slot_encore_state_[slot] =
+          api_.get_slot_encore_state ? api_.get_slot_encore_state(slot) : -1;
+    }
 
     bank_valid_ = false;
     if (api_.copy && api_.copy(bank_.data(), 0, kFlagBytes) == ETERNALSONATA_FLAG_OK) {
@@ -633,6 +796,25 @@ class FlagProbeDialog : public rex::ui::ImGuiDialog {
                                         static_cast<int>(payload.f64));
                           PushEvent(line);
                         });
+
+    SubscribeToCampMenuEvent(registry, ETERNALSONATA_FLAG_EVENT_SCRAPBOOK_CHANGED,
+                             "scrapbook unlocked");
+    SubscribeToCampMenuEvent(registry, ETERNALSONATA_FLAG_EVENT_COSTUMES_BLOCKED_CHANGED,
+                             "costumes blocked");
+    SubscribeToCampMenuEvent(registry, ETERNALSONATA_FLAG_EVENT_ENCORE_COUNT_CHANGED,
+                             "encore counter");
+    SubscribeToCampMenuEvent(registry, ETERNALSONATA_FLAG_EVENT_SAVE_LOCATION_CHANGED,
+                             "save location");
+  }
+
+  void SubscribeToCampMenuEvent(rex::system::ModRegistry* registry, const char* event,
+                                const char* label) {
+    registry->Subscribe(event, [this, label](const rex::system::ModRegistry::EventPayload& payload) {
+      char line[128];
+      std::snprintf(line, sizeof(line), "event     %s = %d", label,
+                    static_cast<int>(payload.f64));
+      PushEvent(line);
+    });
   }
 
   void PushEvent(const char* line) {
@@ -654,11 +836,19 @@ class FlagProbeDialog : public rex::ui::ImGuiDialog {
   int flag_count_ = ETERNALSONATA_FLAG_COUNT;
   int set_count_ = 0;
   int scenario_ = 0;
+  int scrapbook_ = -1;
+  int costumes_blocked_ = -1;
+  int encore_count_ = -1;
+  int save_location_ = -1;
+  int encore_state_ = -1;
+  int slot_encore_state_[kSaveSlots] = {};
 
   // Controls.
   bool show_set_list_ = false;
   int single_index_ = 0;
   int scenario_input_ = 0;
+  int encore_count_input_ = 0;
+  int save_location_input_ = 0;
   bool reset_armed_ = false;
   std::string last_write_;
   std::string last_error_;
@@ -682,17 +872,17 @@ class FlagProbeDialog : public rex::ui::ImGuiDialog {
   std::atomic<int> scenario_event_count_{0};
 };
 
-class FlagProbeMod : public rex::system::IModPlugin {
+class FlagsOverlayMod : public rex::system::IModPlugin {
  public:
-  explicit FlagProbeMod(rex::Runtime* runtime) : runtime_(runtime) {}
+  explicit FlagsOverlayMod(rex::Runtime* runtime) : runtime_(runtime) {}
 
   void OnCreateDialogs(rex::ui::ImGuiDrawer* drawer) override {
-    dialog_ = std::make_unique<FlagProbeDialog>(drawer, runtime_);
+    dialog_ = std::make_unique<FlagsOverlayDialog>(drawer, runtime_);
   }
 
  private:
   rex::Runtime* runtime_ = nullptr;
-  std::unique_ptr<FlagProbeDialog> dialog_;
+  std::unique_ptr<FlagsOverlayDialog> dialog_;
 };
 
 }  // namespace
@@ -706,5 +896,5 @@ extern "C" REX_MOD_PLUGIN_EXPORT rex::system::IModPlugin* rex_mod_create(
   if (abi_version != rex::system::kModPluginAbiVersion || !ctx) {
     return nullptr;
   }
-  return new FlagProbeMod(ctx->runtime);
+  return new FlagsOverlayMod(ctx->runtime);
 }
