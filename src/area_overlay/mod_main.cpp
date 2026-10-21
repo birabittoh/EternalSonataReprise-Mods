@@ -1,4 +1,4 @@
-// debug_area_overlay - an overlay that lists every known field area and
+// area_overlay - an overlay that lists every known field area and
 // force-loads the one the player clicks.
 //
 // There is no reverse engineering and no UI policy left in the game for
@@ -92,12 +92,12 @@ class DebugAreaOverlayDialog : public rex::ui::ImGuiDialog {
   explicit DebugAreaOverlayDialog(rex::ui::ImGuiDrawer* drawer)
       : ImGuiDialog(drawer), api_(LoadOverworldApi()) {
     rex::ui::RegisterBind(
-        "bind_debug_area_overlay", "F5", "Toggle debug area overlay",
+        "bind_area_overlay", "F5", "Toggle area overlay",
         [this] { visible_ = !visible_; }, [this] { return visible_; },
-        "Debug Area Overlay##rex");
+        "Area Overlay##rex");
   }
 
-  ~DebugAreaOverlayDialog() override { rex::ui::UnregisterBind("bind_debug_area_overlay"); }
+  ~DebugAreaOverlayDialog() override { rex::ui::UnregisterBind("bind_area_overlay"); }
 
  protected:
   void OnDraw(ImGuiIO& /*io*/) override {
@@ -111,7 +111,7 @@ class DebugAreaOverlayDialog : public rex::ui::ImGuiDialog {
   void DrawOverlay() {
     if (!api_.ok()) {
       ImGui::SetNextWindowSize(ImVec2(360, 0), ImGuiCond_FirstUseEver);
-      if (!ImGui::Begin("Debug Area Overlay", &visible_, ImGuiWindowFlags_AlwaysAutoResize)) {
+      if (!ImGui::Begin("Area Overlay", &visible_, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::End();
         return;
       }
@@ -123,7 +123,7 @@ class DebugAreaOverlayDialog : public rex::ui::ImGuiDialog {
 
     ImGui::SetNextWindowSize(ImVec2(420, 480), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.9f);
-    if (!ImGui::Begin("Debug Area Overlay##rex", &visible_, ImGuiWindowFlags_NoCollapse)) {
+    if (!ImGui::Begin("Area Overlay##rex", &visible_, ImGuiWindowFlags_NoCollapse)) {
       ImGui::End();
       return;
     }

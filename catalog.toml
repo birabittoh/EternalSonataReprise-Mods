@@ -4,8 +4,8 @@
 # the place to cherry-pick. Ids in `featured` are sorted to the top of the tab
 # and must also appear in `published`.
 published = [
+    "area_overlay",
     "bus_inspector",
-    "debug_area_overlay",
     "low_hp_alarm",
     "party_overlay",
     "save_anywhere",
