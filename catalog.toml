@@ -5,6 +5,8 @@
 # and must also appear in `published`.
 published = [
     "area_overlay",
+    "artwork_portraits_360",
+    "artwork_portraits_ps3",
     "bus_inspector",
     "costume_overlay",
     "costume_tints",
