@@ -1,0 +1,7 @@
+manifest_version = 2
+name = "Artwork Portraits (Xbox 360)"
+version = "1.0.0"
+game_version = "1.3.4"
+author = "BiRabittoh"
+description = "Redraws every party member's camp portraits from official artwork."
+target = "360"
