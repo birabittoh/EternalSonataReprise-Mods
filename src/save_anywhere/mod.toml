@@ -1,6 +1,7 @@
 manifest_version = 2
+
 name = "Save Anywhere"
-version = "1.0.0"
+version = "1.1.0"
 game_version = "1.2.0"
 author = "BiRabittoh"
 description = "Keeps the Save entry of the pause menu selectable everywhere, not only next to a save point."
