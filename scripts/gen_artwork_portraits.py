@@ -218,7 +218,10 @@ def windows(images_by_char):
     """Per (kind, size), the union of the vanilla opaque boxes: the area the game's frame expects."""
     win = {}
     for images in images_by_char:
-        for kind, (_, _, van) in images.items():
+        for kind, (f, ordinal, van) in images.items():
+            # A panel that is the status art would widen the real panels' window.
+            if kind != "status" and images["status"][:2] == (f, ordinal):
+                continue
             ys, xs = np.where(np.array(van)[:, :, 3] > 16)
             box = (xs.min(), ys.min(), xs.max() + 1, ys.max() + 1)
             old = win.get((kind, van.size))
@@ -283,7 +286,8 @@ def main():
                 if kind in ("small_face", "face") and c in SMALL_TWEAK:
                     dx, zoom, dy = SMALL_TWEAK[c]
                     scale, eye = scale * zoom, (eye[0] + dx, eye[1] + dy)
-            new = clip(place(art, van.size, scale, a_eye, eye), win[(kind, van.size)])
+            shared = kind != "status" and images["status"][:2] == (f, ordinal)
+            new = clip(place(art, van.size, scale, a_eye, eye), win[("status" if shared else kind, van.size)])
             before.append(van)
             after.append(new)
             if kind == "small_face" and c == ICON[args.target][0]:
